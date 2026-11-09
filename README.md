@@ -12,17 +12,17 @@ This simulator lets you see it for yourself.
 
 ## What It Does
 
-Five simulation modes running against the same pool of 150 players, so you can compare them directly.
+Five simulation modes running against a pool of 200,000 players — a realistic 24-hour concurrent population for a major COD title — so you can compare them directly.
 
 **SBMM Only (Pre-2016)** — How matchmaking worked before MMR existed. Stable brackets, predictable lobbies, no rubber-banding.
 
-**SBMM + MMR (2016 to Present)** — The current system. Watch your MMR bounce after every match and see the yo-yo pattern form in real time. Adjust the MMR aggressiveness slider and watch it get worse.
+**SBMM + MMR (2016 to Present)** — The current system. Watch your MMR bounce after every match and see the yo-yo pattern form in real time. Adjust the MMR aggressiveness slider and watch it get worse. The yo-yo hits hardest at mid-tier (skill 66), is dampened for casuals (skill 33), and is visible but compressed for top-tier players (skill 100).
 
 **Open Matchmaking (BO7 Launch–Season 4)** — SBMM dialled back, skill "minimally considered." MMR still running underneath. The yo-yo doesn't stop. Activision's own data: 32.7% higher quit rates, 59.2% more "Not Fun" ratings.
 
 **Classic Matchmaking (BO7 Season 5 / MW4)** — Persistent lobbies "inspired by" BO1 and BO2. Feels better because you adapt to your opponents. MMR still running underneath. It's a placebo.
 
-**True P2P Legacy (COD4 / MW2 / BO2)** — What people are actually asking for when they say "go back." No MMR, no yo-yo, but one player IS the server with zero ping advantage, and there's no server-side anti-cheat. This is the trade-off nobody talks about.
+**No SBMM (What the Community Is Actually Asking For)** — Complete removal of all skill-based matchmaking. No brackets, no MMR, pure connection-based lobbies on dedicated servers. No yo-yo, but no protection either. A 0.66 KD casual can land in a lobby with a 2.0 KD grinder, and it happens regularly. This is what "remove SBMM" actually means. Not better matchmaking. No matchmaking.
 
 Run any two modes side-by-side and watch the same players produce completely different experiences under different systems.
 
@@ -34,11 +34,17 @@ Run any two modes side-by-side and watch the same players produce completely dif
 
 No installation. No dependencies. No internet connection required. Works offline, works on any modern browser.
 
-Pick a mode, hit Run, and watch 30 matches simulate. Adjust the MMR aggressiveness slider in Mode 2 to see how volatility changes the yo-yo pattern. Use the Compare feature to run two modes side-by-side with the same player pool.
+Pick a mode, hit Run, and watch 30 matches simulate. Adjust the MMR aggressiveness slider in Mode 2 to see how volatility changes the yo-yo pattern. Use the Compare feature to run two modes side-by-side with the same player pool. Use the Skill Tiers view to see how the same system treats a casual, a mid-tier grinder, and a top-tier player completely differently.
 
 ## The "You" Player
 
 One player in the pool is highlighted as "You." Set your own starting skill, KD, region, input device, and ping, then watch how each matchmaking system treats you differently across 30 matches.
+
+## How The MMR Model Works
+
+The simulator uses a Glicko-style MMR system on a 1–200 internal scale with a K-factor that scales based on population position. Players near the skill average (skill 50) experience the full force of MMR adjustments. Players at the extremes — both casual and elite — get dampened adjustments, which is why the yo-yo hits the mid-tier majority the hardest. The expanded scale gives top-tier players headroom above their starting MMR, so the system can push them up after a good performance and pull them back down, producing the compressed but visible yo-yo pattern that high-skill players actually experience.
+
+This matches the real-world pattern: casuals barely notice, the mid-tier majority gets whiplash, and the top tier gets locked in a box with no variety.
 
 ## What This Is Based On
 
