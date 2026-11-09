@@ -28,7 +28,7 @@ Run any two modes side-by-side and watch the same players produce completely dif
 
 ## How To Use It
 
-1. Download `index.html`
+1. Download `SBMMSIM.html`
 2. Open it in your browser
 3. That's it
 
