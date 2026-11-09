@@ -6,1498 +6,1328 @@
 <title>COD Matchmaking Simulator — Scotty McGaming</title>
 <style>
 :root{
-  --bg:#0a0a0f;--panel:#14141f;--panel2:#1b1b2a;--border:#2a2a3a;
-  --green:#00ff88;--red:#ff4444;--blue:#4488ff;--amber:#ffaa00;--pink:#ff66ff;--yellow:#ffdd33;
+  --bg:#0a0a0f;--panel:#14141f;--panel2:#1a1a28;--border:#2a2a3a;
+  --green:#00ff88;--red:#ff4444;--blue:#4488ff;--amber:#ffaa00;--pink:#ff66ff;
   --text:#e0e0e0;--muted:#888899;
-  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
-h1,h2,h3{margin:0;font-weight:700}
-h3{font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.muted{color:var(--muted)}
-.site-head{padding:18px 22px 14px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#11111b,#0a0a0f)}
-.brand{display:flex;gap:16px;align-items:center}
-.logo{width:48px;height:48px;border-radius:10px;border:2px solid var(--green);position:relative;flex:none;box-shadow:0 0 18px rgba(0,255,136,.25)}
-.logo::before,.logo::after{content:"";position:absolute;background:var(--green)}
-.logo::before{left:50%;top:7px;bottom:7px;width:2px;transform:translateX(-50%)}
-.logo::after{top:50%;left:7px;right:7px;height:2px;transform:translateY(-50%)}
-.logo span{position:absolute;inset:13px;border:2px solid var(--green);border-radius:50%}
-h1{font-size:28px;letter-spacing:.02em}
-h1 em{font-style:normal;color:var(--green)}
-.sub{margin:2px 0 0;color:var(--text);font-size:15px}
-.credit{margin:2px 0 0;color:var(--muted);font-size:13px}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+a{color:var(--blue)}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:18px 24px;background:linear-gradient(180deg,#141422 0%,#0a0a0f 100%);border-bottom:1px solid var(--border)}
+header h1{margin:0;font-size:28px;letter-spacing:.5px;font-weight:800}
+header h1 .acc{color:var(--green)}
+header .sub{margin:4px 0 0;color:var(--text);font-size:15px}
+header .credit{margin:4px 0 0;color:var(--muted);font-size:13px}
+.poolbadge{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 16px;text-align:right;min-width:220px}
+.poolbadge .big{font-size:26px;font-weight:800;color:var(--green);line-height:1.1}
+.poolbadge .small{font-size:12px;color:var(--muted)}
+.toolbar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 24px;background:rgba(10,10,15,.96);border-bottom:1px solid var(--border);backdrop-filter:blur(4px)}
+.toolbar .sep{width:1px;height:28px;background:var(--border);margin:0 4px}
+.toolbar label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.counter{margin-left:auto;font-weight:700;font-size:16px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px 12px}
+.counter .n{color:var(--green)}
+button{background:#1c1c2b;color:var(--text);border:1px solid var(--border);border-radius:7px;padding:8px 13px;font:inherit;font-size:14px;cursor:pointer;transition:border-color .15s,background .15s}
+button:hover{border-color:#4a4a62;background:#222234}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+button.primary{background:var(--green);color:#03140b;border-color:var(--green);font-weight:800}
+button.primary:hover{background:#33ffa0}
+button.warn{border-color:#5a2a2a}
+button.small{padding:5px 9px;font-size:13px}
+input[type=number],input[type=text],select{background:#0f0f18;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font:inherit;font-size:14px}
+input[type=number]{width:80px}
+input[type=range]{accent-color:var(--green);width:100%}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;padding:18px 24px}
+aside{display:flex;flex-direction:column;gap:14px}
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px}
-.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 22px 0;padding:10px 14px}
-.btn{background:#1d1d2c;color:var(--text);border:1px solid var(--border);border-radius:7px;padding:8px 14px;font:600 14px var(--font);cursor:pointer;transition:background .15s,border-color .15s}
-.btn:hover{border-color:#4a4a62;background:#24243a}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btn.primary{background:var(--green);color:#04120b;border-color:var(--green)}
-.btn.primary:hover{background:#3dffa6}
-.btn.primary.running{background:var(--amber);border-color:var(--amber)}
-.btn.small{padding:6px 10px;font-size:13px}
-.ctl{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;font-weight:600}
-.ctl input[type=text]{width:110px}
-input[type=text],input[type=number],select{background:#0f0f18;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font:14px var(--font)}
-input[type=range]{accent-color:var(--green);width:130px}
-input[type=checkbox]{accent-color:var(--green);width:16px;height:16px}
-.status{margin-left:auto;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
-.tabs{display:flex;flex-wrap:wrap;gap:4px;margin:14px 22px 0;border-bottom:1px solid var(--border)}
-.tab{background:none;border:none;border-bottom:3px solid transparent;color:var(--muted);padding:10px 14px;font:600 14px var(--font);cursor:pointer}
-.tab:hover{color:var(--text)}
-.tab.active{color:var(--green);border-bottom-color:var(--green)}
-.tab .tn{display:inline-block;min-width:20px;padding:0 5px;margin-right:6px;border-radius:4px;background:#22222f;color:var(--text);font-size:12px;text-align:center}
-.tab.active .tn{background:var(--green);color:#04120b}
-.layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:16px;padding:16px 22px}
-.side{display:flex;flex-direction:column;gap:16px}
-.side label.f{display:block;margin-bottom:12px;font-size:13px;color:var(--muted);font-weight:600}
-.side label.f .row{display:flex;align-items:center;gap:8px;margin-top:5px}
-.side label.f input[type=range]{flex:1;width:auto}
-.side label.f select{width:100%;margin-top:5px}
-.side output{color:var(--green);font-weight:700;float:right}
-.you-title{display:flex;align-items:center;gap:8px;color:var(--green)}
-.you-dot{width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
-.view{display:none;flex-direction:column;gap:16px}
-.view.active{display:flex}
-.mode-head .mh-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px}
-.mode-head h2{font-size:22px}
-.mnum{color:var(--green);font-size:14px;letter-spacing:.08em;margin-right:6px}
-.era{font-size:13px;color:var(--blue);border:1px solid #2b3f6b;border-radius:20px;padding:2px 10px}
-.see{margin:8px 0 0;color:var(--text)}
-.see strong{color:var(--amber)}
-details.how{margin-top:10px;background:#101019;border:1px solid var(--border);border-radius:8px;padding:8px 12px}
-details.how summary{cursor:pointer;color:var(--blue);font-weight:700}
-details.how p{margin:8px 0 2px;font-size:15px;max-width:900px}
-.params{display:flex;flex-wrap:wrap;gap:18px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-.params .ctl{color:var(--text)}
-.params .val{color:var(--green);font-weight:700;min-width:36px;font-variant-numeric:tabular-nums}
-.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.stat{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-height:76px}
-.stat .l{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-.stat .v{font-size:22px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
-.stat .s{font-size:12px;color:var(--muted)}
+.panel h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+.field{margin-bottom:12px}
+.field .row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;margin-bottom:4px}
+.field .val{font-weight:700;color:var(--green)}
+.field select{width:100%}
+.check{display:flex;align-items:flex-start;gap:8px;font-size:14px;margin:8px 0;cursor:pointer}
+.check input{margin-top:3px;accent-color:var(--green)}
+.check small{display:block;color:var(--muted);font-size:12px}
+.tierbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.youtag{display:inline-block;background:var(--green);color:#03140b;font-weight:800;border-radius:4px;padding:1px 6px;font-size:12px}
+.muted{color:var(--muted)}
+.tabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{background:transparent;border:none;border-bottom:3px solid transparent;border-radius:0;padding:10px 14px;color:var(--muted);font-weight:600}
+.tab:hover{background:transparent;color:var(--text)}
+.tab.active{color:var(--text);border-bottom-color:var(--green)}
+.tab .num{display:inline-block;min-width:20px;padding:0 5px;margin-right:6px;border-radius:4px;background:#22223a;color:var(--text);font-size:12px}
+.tab.active .num{background:var(--green);color:#03140b}
+.tabpanel{display:none}
+.tabpanel.active{display:block}
+.mode-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.mode-head h2{margin:0;font-size:24px}
+.era{display:inline-block;margin-top:4px;color:var(--blue);font-size:13px;font-weight:600;letter-spacing:.3px}
+.tagline{color:var(--muted);font-size:14px;max-width:520px;text-align:right}
+details.info{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:10px 14px;margin:10px 0}
+details.info summary{cursor:pointer;font-weight:700;color:var(--blue)}
+details.info p{margin:10px 0 2px;font-size:15px;line-height:1.6}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin:12px 0 16px}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:10px 12px}
+.stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
+.stat .v{font-size:22px;font-weight:800;margin-top:2px}
+.stat .h{font-size:11px;color:var(--muted);margin-top:2px}
 .stat.good .v{color:var(--green)}
 .stat.bad .v{color:var(--red)}
 .stat.info .v{color:var(--blue)}
-.stat.warn{border-color:var(--red);background:#2a0f13}
-.stat.warn .v{color:var(--red);font-size:17px}
-.stat.wide{grid-column:span 2}
-.strip-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-.strip{display:flex;flex-wrap:wrap;gap:5px}
-.chip{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);background:#101019;color:var(--muted);font:700 12px var(--font);cursor:default;position:relative;padding:0}
-.chip.w{border-color:var(--green);color:var(--green);cursor:pointer}
-.chip.l{border-color:var(--red);color:var(--red);cursor:pointer}
-.chip.sel.w{background:var(--green);color:#04120b}
-.chip.sel.l{background:var(--red);color:#fff}
-.chip .hm{position:absolute;top:-4px;right:-4px;width:9px;height:9px;border-radius:50%;background:var(--pink)}
-.chip .ch{position:absolute;bottom:-4px;right:-4px;width:9px;height:9px;border-radius:2px;background:var(--red);border:1px solid #fff}
-.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.span2{grid-column:1/-1}
-.chart canvas{display:block;width:100%;height:290px}
-.chart.tall canvas{height:350px}
-.chart.topo canvas{height:420px}
-.chart .cap{margin:8px 0 0;font-size:14px;color:var(--text)}
+.stat.warn .v{color:var(--amber)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px;min-width:0}
+.card.wide{grid-column:1/-1}
+.card h3{margin:0 0 4px;font-size:16px}
+.card .cap{margin:0 0 8px;font-size:13px;color:var(--muted)}
+canvas{width:100%;display:block}
+.h200{height:200px}.h240{height:240px}.h260{height:260px}.h300{height:300px}.h340{height:340px}.h480{height:480px}
+.lobbycard{margin-top:14px}
+.lobby-head{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:10px}
+.lobby-head .slider{flex:1;min-width:200px;display:flex;align-items:center;gap:10px}
+.result{font-weight:800;font-size:18px;padding:4px 12px;border-radius:6px}
+.result.win{background:rgba(0,255,136,.12);color:var(--green);border:1px solid rgba(0,255,136,.4)}
+.result.loss{background:rgba(255,68,68,.12);color:var(--red);border:1px solid rgba(255,68,68,.4)}
+.result.draw{background:rgba(136,136,153,.12);color:var(--muted);border:1px solid var(--border)}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:4px;vertical-align:middle;letter-spacing:.4px}
+.pill.blow{background:rgba(255,170,0,.15);color:var(--amber);border:1px solid rgba(255,170,0,.4)}
+.pill.stay{background:rgba(0,255,136,.12);color:var(--green)}
+.pill.new{background:rgba(68,136,255,.15);color:var(--blue)}
+.pill.party{background:rgba(255,102,255,.15);color:var(--pink)}
+.pill.cheat{background:rgba(255,68,68,.18);color:var(--red)}
+.teams{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:5px 6px;text-align:right;border-bottom:1px solid #20202e;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+tr.you td{color:var(--green);font-weight:800;background:rgba(0,255,136,.07)}
+.teamtitle{font-weight:800;margin:0 0 6px;font-size:14px}
+.teamtitle.a{color:var(--blue)}.teamtitle.b{color:var(--red)}
 .tablewrap{overflow-x:auto}
-table.lobby{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
-table.lobby th{text-align:left;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);padding:6px 8px;white-space:nowrap}
-table.lobby td{padding:6px 8px;border-bottom:1px solid #1e1e2c;white-space:nowrap}
-table.lobby tr.you td{color:var(--green);font-weight:700;background:rgba(0,255,136,.06)}
-.teamA{color:var(--blue);font-weight:700}
-.teamB{color:var(--red);font-weight:700}
-.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:4px;padding:1px 6px;margin-right:4px}
-.tag.stay{background:#0f2b1f;color:var(--green)}
-.tag.new{background:#13213f;color:var(--blue)}
-.tag.host{background:#3a1440;color:var(--pink)}
-.tag.cheat{background:#3d1014;color:var(--red)}
-.tag.party{background:#3a2a0a;color:var(--amber)}
-.tag.quit{background:#2a2a3a;color:var(--muted)}
-.persist{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
-.slot{border:1px solid var(--border);border-radius:8px;padding:8px;font-size:12px;min-height:58px;background:#101019;overflow:hidden}
-.slot b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.slot.stayed{border-color:var(--green)}
-.slot.new{border-color:var(--blue)}
-.slot.you{border-color:var(--green);background:rgba(0,255,136,.08)}
-.slot.party{border-color:var(--amber)}
-.legend-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:13px;color:var(--muted)}
-.legend-row i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.left-list{margin-top:8px;font-size:13px;color:var(--muted)}
-.pop-grid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}
-.popstats .stat{margin-bottom:10px}
-.compare-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.compare-controls .presets{display:flex;flex-wrap:wrap;gap:8px}
-.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.col-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.col-head .sw{width:14px;height:14px;border-radius:3px}
-.col-head h2{font-size:18px}
-.mini-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
-.mini-stats .stat{min-height:64px;padding:8px 10px}
-.mini-stats .stat .v{font-size:19px}
-.verdict{font-size:17px;line-height:1.55;border-left:4px solid var(--green)}
+.compare-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.verdict{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:8px;padding:12px 16px;margin:0 0 14px;font-size:15px;line-height:1.6}
 .verdict b{color:var(--green)}
-.verdict .r{color:var(--red);font-weight:700}
-.net-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.net-cols canvas{display:block;width:100%;height:470px}
-.net-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.net-cap{font-size:15px;margin:10px 0 4px;font-weight:600}
-.net-cap.bad{color:var(--amber)}
-.net-cap.good{color:var(--green)}
-.ping-legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted)}
-.ping-legend i{display:inline-block;width:22px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle}
-footer{border-top:1px solid var(--border);padding:18px 22px 30px;color:var(--muted);font-size:13px}
-footer p{margin:4px 0;max-width:1100px}
+.cmp-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.cmp-col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.cmp-col h3{margin:0;font-size:18px}
+.cmp-col .stats{margin:0}
+.netcap{font-size:14px;color:var(--text);background:var(--panel2);border-radius:8px;padding:10px 12px;margin-top:10px;line-height:1.5}
+.tiertable td,.tiertable th{font-size:14px;padding:8px}
+.swatch{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+footer{border-top:1px solid var(--border);padding:20px 24px 30px;color:var(--muted);font-size:13px;line-height:1.6}
+footer p{margin:4px 0}
 footer .links{color:var(--text)}
-details.model{margin:0 22px 16px}
-details.model summary{cursor:pointer;color:var(--blue);font-weight:700}
-details.model ul{margin:8px 0 0;padding-left:20px;max-width:1000px}
-details.model li{margin:4px 0}
-.flash{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1d1d2c;border:1px solid var(--green);color:var(--text);padding:10px 16px;border-radius:8px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:10}
-.flash.show{opacity:1}
-@media (max-width:1150px){
-  .layout{grid-template-columns:1fr}
-  .side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--green);color:var(--text);padding:10px 18px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:50}
+.toast.show{opacity:1}
+.kbd{font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:0 5px}
+@media (max-width:1150px){.layout{grid-template-columns:1fr}aside{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}}
 @media (max-width:820px){
-  .charts,.cols,.net-cols,.pop-grid{grid-template-columns:1fr}
-  .side{grid-template-columns:1fr}
-  .persist{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .stat.wide{grid-column:auto}
-  .toolbar,.tabs{margin-left:12px;margin-right:12px}
-  .layout{padding:12px}
-  h1{font-size:22px}
+  .grid,.grid3,.cmp-cols,.teams{grid-template-columns:1fr}
+  .layout,.toolbar,header,footer{padding-left:16px;padding-right:16px}
+  .tagline{text-align:left}
+  .counter{margin-left:0}
+  header h1{font-size:22px}
 }
 </style>
 </head>
 <body>
 
-<header class="site-head">
-  <div class="brand">
-    <div class="logo"><span></span></div>
-    <div>
-      <h1>COD <em>Matchmaking</em> Simulator</h1>
-      <p class="sub">Understanding the difference between SBMM, MMR, and why the community is arguing about the wrong thing</p>
-      <p class="credit">Built by Scotty McGaming — github.com/scottymcgaming</p>
-    </div>
+<header>
+  <div>
+    <h1>COD <span class="acc">Matchmaking</span> Simulator</h1>
+    <p class="sub">Understanding the difference between SBMM, MMR, and why the community is arguing about the wrong thing</p>
+    <p class="credit">Built by Scotty McGaming — github.com/scottymcgaming</p>
+  </div>
+  <div class="poolbadge">
+    <div class="big" id="poolSize">200,000</div>
+    <div class="small">simulated players in the shared pool</div>
+    <div class="small" id="poolInst">Generating...</div>
   </div>
 </header>
 
-<div class="toolbar panel">
-  <button id="btnRun" class="btn primary">&#9654; Run 30 Matches</button>
-  <button id="btnStep" class="btn">Step 1 Match</button>
-  <label class="ctl">Speed <input type="range" id="speed" min="100" max="2000" step="50" value="500"><span id="speedVal">500ms</span></label>
-  <label class="ctl"><input type="checkbox" id="instant"> Instant complete</label>
-  <button id="btnReset" class="btn">Reset</button>
-  <button id="btnRegen" class="btn">Regenerate Players</button>
-  <label class="ctl">Seed <input type="text" id="seed" value="scotty" maxlength="24" spellcheck="false"></label>
-  <button id="btnSeed" class="btn">Apply Seed</button>
-  <button id="btnExport" class="btn">Export CSV</button>
-  <span id="status" class="status"></span>
+<div class="toolbar" role="toolbar" aria-label="Simulation controls">
+  <button class="primary" id="btnRun" title="Space">Run Simulation</button>
+  <button id="btnStep" title="Right arrow">Step</button>
+  <button id="btnInstant">Instant Complete</button>
+  <button id="btnReset">Reset</button>
+  <span class="sep"></span>
+  <label>Speed <input type="range" id="speed" min="100" max="2000" step="50" value="500" style="width:120px"> <span id="speedVal">500 ms</span></label>
+  <span class="sep"></span>
+  <label>Seed <input type="number" id="seed" value="1337" min="1" max="999999999" style="width:110px"></label>
+  <button id="btnSeed" class="small">Apply Seed</button>
+  <button id="btnRegen" class="warn">Regenerate Players</button>
+  <button id="btnExport">Export CSV</button>
+  <div class="counter">Match <span class="n" id="matchNum">0</span> / 30</div>
 </div>
 
-<nav class="tabs" id="tabs">
-  <button class="tab active" data-view="m1"><span class="tn">1</span>SBMM Only</button>
-  <button class="tab" data-view="m2"><span class="tn">2</span>SBMM + MMR</button>
-  <button class="tab" data-view="m3"><span class="tn">3</span>Open</button>
-  <button class="tab" data-view="m4"><span class="tn">4</span>Classic</button>
-  <button class="tab" data-view="m5"><span class="tn">5</span>P2P Legacy</button>
-  <button class="tab" data-view="compare"><span class="tn">&#8646;</span>Compare</button>
-  <button class="tab" data-view="network"><span class="tn">&#9673;</span>Network Topology</button>
-</nav>
-
 <div class="layout">
-  <aside class="side">
+  <aside>
     <div class="panel">
-      <h3 class="you-title"><span class="you-dot"></span>"You"</h3>
-      <label class="f">Starting skill <output id="ySkillV">55</output>
-        <div class="row"><input type="range" id="ySkill" min="1" max="100" value="55"></div></label>
-      <label class="f">Starting K/D
-        <div class="row"><input type="number" id="yKd" min="0.1" max="5" step="0.05" value="1.10" style="width:90px" disabled>
-        <label class="ctl" style="font-weight:600"><input type="checkbox" id="yKdAuto" checked> Auto from skill</label></div></label>
-      <label class="f">Region
-        <select id="yRegion"><option>EU-West</option><option>EU-East</option><option>NA-East</option><option>NA-West</option></select></label>
-      <label class="f">Input device
-        <select id="yInput"><option>Controller</option><option>Mouse+Keyboard</option></select></label>
-      <label class="f">Ping <output id="yPingV">30ms</output>
-        <div class="row"><input type="range" id="yPing" min="15" max="120" value="30"></div></label>
-      <p class="muted" id="youInfo" style="margin:0;font-size:13px"></p>
+      <h3><span class="youtag">YOU</span> Your Player</h3>
+      <div class="field">
+        <div class="row"><span>Starting skill</span><span class="val" id="skillVal">55</span></div>
+        <input type="range" id="youSkill" min="1" max="100" value="55">
+      </div>
+      <div class="tierbtns field">
+        <button class="small" data-tier="33">33</button>
+        <button class="small" data-tier="55">55</button>
+        <button class="small" data-tier="66">66</button>
+        <button class="small" data-tier="100">100</button>
+      </div>
+      <div class="field">
+        <div class="row"><span>Starting K/D</span><input type="number" id="youKD" step="0.01" min="0.1" max="4" value="1.10" disabled></div>
+        <label class="check"><input type="checkbox" id="kdAuto" checked><span>Auto from skill<small>Untick to make the system start with a wrong guess about you</small></span></label>
+      </div>
+      <div class="field">
+        <div class="row"><span>Region</span></div>
+        <select id="youRegion"><option>EU-West</option><option>EU-East</option><option>NA-East</option><option>NA-West</option></select>
+      </div>
+      <div class="field">
+        <div class="row"><span>Input device</span></div>
+        <select id="youInput"><option>Controller</option><option>Mouse+Keyboard</option></select>
+      </div>
+      <div class="field">
+        <div class="row"><span>Your ping</span><span class="val" id="pingVal">40 ms</span></div>
+        <input type="range" id="youPing" min="15" max="120" value="40">
+      </div>
     </div>
+
     <div class="panel">
-      <h3>Player pool (150 players)</h3>
-      <div class="chart"><canvas id="poolChart" style="height:210px"></canvas></div>
-      <p class="muted" id="poolInfo" style="margin:8px 0 0;font-size:13px"></p>
+      <h3>Matchmaking Settings</h3>
+      <div class="field">
+        <div class="row"><span>MMR Aggressiveness</span><span class="val" id="volVal">0.15</span></div>
+        <input type="range" id="vol" min="0.05" max="0.40" step="0.01" value="0.15">
+        <small class="muted">How far one match moves your MMR (Modes 2, 3 and 4)</small>
+      </div>
+      <label class="check"><input type="checkbox" id="overlay" checked><span>Show SBMM bracket overlay<small>Draws your skill bracket on top of MMR</small></span></label>
+      <label class="check"><input type="checkbox" id="protect" checked><span>Low-skill protection<small>Below-average players get extra dampening so they are shielded from big swings</small></span></label>
+      <label class="check"><input type="checkbox" id="party"><span>6-stack party (Mode 4)<small>Your five teammates never change</small></span></label>
+      <label class="check"><input type="checkbox" id="cheaters"><span>Include cheaters<small>0.5% of the pool gets a +35 skill boost</small></span></label>
+    </div>
+
+    <div class="panel">
+      <h3>Player Pool</h3>
+      <div style="font-size:14px;line-height:1.6">
+        <div><b style="color:var(--green)">200,000</b> players, normally distributed skill (average 50, spread 15).</div>
+        <div class="muted" id="poolDetail" style="font-size:13px"></div>
+        <div class="muted" style="font-size:13px;margin-top:6px">Every player's stats come from their ID and the seed, so the whole pool exists without storing 200,000 full profiles. Full profiles are only built for players who land in one of your lobbies.</div>
+        <div style="margin-top:8px;font-size:13px">Shortcuts: <span class="kbd">Space</span> run/pause, <span class="kbd">&rarr;</span> step</div>
+      </div>
     </div>
   </aside>
 
-  <main id="main">
-    <section class="view active" id="view-m1"></section>
-    <section class="view" id="view-m2"></section>
-    <section class="view" id="view-m3"></section>
-    <section class="view" id="view-m4"></section>
-    <section class="view" id="view-m5"></section>
+  <main>
+    <nav class="tabs" id="tabs" role="tablist">
+      <button class="tab active" data-tab="m1"><span class="num">1</span>SBMM Only</button>
+      <button class="tab" data-tab="m2"><span class="num">2</span>SBMM + MMR</button>
+      <button class="tab" data-tab="m3"><span class="num">3</span>Open</button>
+      <button class="tab" data-tab="m4"><span class="num">4</span>Classic</button>
+      <button class="tab" data-tab="m5"><span class="num">5</span>No SBMM</button>
+      <button class="tab" data-tab="compare"><span class="num">VS</span>Compare</button>
+      <button class="tab" data-tab="tiers"><span class="num">T</span>Skill Tiers</button>
+      <button class="tab" data-tab="network"><span class="num">N</span>Network</button>
+    </nav>
 
-    <section class="view" id="view-compare">
-      <div class="panel">
-        <div class="compare-controls">
-          <label class="ctl">Left <select id="cmpA"></select></label>
-          <label class="ctl">Right <select id="cmpB"></select></label>
-          <div class="presets">
-            <button class="btn small" data-preset="1,2">1 vs 2: Is it SBMM or MMR?</button>
-            <button class="btn small" data-preset="2,3">2 vs 3: Does loosening SBMM help?</button>
-            <button class="btn small" data-preset="2,5">2 vs 5: What does going back cost?</button>
-          </div>
+    <div id="modePanels"></div>
+
+    <section class="tabpanel" id="tab-compare">
+      <div class="mode-head"><div><h2>Side-by-Side Comparison</h2><span class="era">Same player. Same pool. Same form every match. Different rules.</span></div></div>
+      <div class="compare-bar">
+        <label>Mode A <select id="cmpA"></select></label>
+        <span class="muted">vs</span>
+        <label>Mode B <select id="cmpB"></select></label>
+      </div>
+      <div class="presets" style="margin-bottom:12px">
+        <button class="small" data-preset="1,2">1 vs 2: What causes the yo-yo?</button>
+        <button class="small" data-preset="2,3">2 vs 3: Does Open fix it?</button>
+        <button class="small" data-preset="2,5">2 vs 5: Remove everything?</button>
+        <button class="small" data-preset="1,5">1 vs 5: What brackets protect</button>
+      </div>
+      <div class="verdict" id="cmpVerdict"></div>
+      <div class="cmp-cols">
+        <div class="cmp-col">
+          <h3 id="cmpTitleA"></h3>
+          <div class="stats" id="cmpStatsA"></div>
+          <div class="card"><h3>Rating the matchmaker uses</h3><canvas id="cmpRatingA" class="h260"></canvas></div>
+          <div class="card"><h3>K/D Per Match</h3><canvas id="cmpKdA" class="h240"></canvas></div>
         </div>
-        <p class="muted" style="margin:10px 0 0">Both sides use the same 150 players, the same "You" and the same seed. Only the matchmaking rules change. Press Run to play 30 matches on both at once.</p>
+        <div class="cmp-col">
+          <h3 id="cmpTitleB"></h3>
+          <div class="stats" id="cmpStatsB"></div>
+          <div class="card"><h3>Rating the matchmaker uses</h3><canvas id="cmpRatingB" class="h260"></canvas></div>
+          <div class="card"><h3>K/D Per Match</h3><canvas id="cmpKdB" class="h240"></canvas></div>
+        </div>
       </div>
-      <div class="cols">
-        <div class="panel"><div class="col-head"><span class="sw" style="background:#4488ff"></span><h2 id="cA-title"></h2></div>
-          <div class="chart"><canvas id="cA-rating" style="height:300px"></canvas></div>
-          <div class="chart" style="margin-top:10px"><canvas id="cA-kd" style="height:240px"></canvas></div>
-          <div class="mini-stats" id="cA-stats"></div></div>
-        <div class="panel"><div class="col-head"><span class="sw" style="background:#ffaa00"></span><h2 id="cB-title"></h2></div>
-          <div class="chart"><canvas id="cB-rating" style="height:300px"></canvas></div>
-          <div class="chart" style="margin-top:10px"><canvas id="cB-kd" style="height:240px"></canvas></div>
-          <div class="mini-stats" id="cB-stats"></div></div>
-      </div>
-      <div class="panel verdict" id="c-verdict"></div>
-      <div class="charts">
-        <div class="panel chart span2 tall"><h3>Rating comparison: the same player under both systems</h3><canvas id="c-mmr"></canvas></div>
-        <div class="panel chart"><h3>K/D variance (higher = more yo-yo)</h3><canvas id="c-kdvar"></canvas></div>
-        <div class="panel chart"><h3>Lobby difficulty swing</h3><canvas id="c-lobby"></canvas></div>
+      <div class="grid">
+        <div class="card wide"><h3>MMR Comparison</h3><p class="cap">The same player's rating under both systems, on the same scale.</p><canvas id="cmpRating" class="h340"></canvas></div>
+        <div class="card"><h3>K/D Variance Comparison</h3><p class="cap">Standard deviation of your K/D across the matches played. Higher means more yo-yo.</p><canvas id="cmpVar" class="h260"></canvas></div>
+        <div class="card"><h3>Lobby Difficulty Comparison</h3><p class="cap">Average skill of your lobby each match.</p><canvas id="cmpLobby" class="h260"></canvas></div>
       </div>
     </section>
 
-    <section class="view" id="view-network">
-      <div class="panel">
-        <div class="net-head">
-          <div>
-            <h2 style="font-size:22px">Peer-to-Peer vs Dedicated Server</h2>
-            <p class="muted" style="margin:4px 0 0">The same 12 players, connected two different ways. Each moving dot is a packet of game data.</p>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn" id="netNew">New lobby</button>
-            <button class="btn" id="netMig">Host leaves (migration)</button>
-          </div>
-        </div>
-        <div class="ping-legend" style="margin-top:12px">
-          <span><i style="background:#00ff88"></i>Under 30ms</span><span><i style="background:#ffdd33"></i>30 to 60ms</span>
-          <span><i style="background:#ffaa00"></i>60 to 90ms</span><span><i style="background:#ff4444"></i>Over 90ms</span>
-        </div>
+    <section class="tabpanel" id="tab-tiers">
+      <div class="mode-head"><div><h2>Yo-Yo by Skill Tier</h2><span class="era">Three players, same system, same seed</span></div>
+        <label>System <select id="tierMode"><option value="2">Mode 2: SBMM + MMR</option><option value="3">Mode 3: Open</option><option value="4">Mode 4: Classic</option></select></label></div>
+      <details class="info" open><summary>How This Works</summary><p>MMR does not hit everyone equally. Players near the average get the full force of every adjustment, because that is where most of the population sits and the system has the most room to shuffle them around. Players at the bottom are shielded so they do not quit. Players at the very top still bounce, but there are so few people up there that their lobbies can only get so much harder, so the swing is squashed. Watch the red line: the 66 player gets whiplash.</p></details>
+      <div class="card" style="margin-bottom:14px"><div class="tablewrap"><table class="tiertable" id="tierTable"></table></div></div>
+      <div class="grid">
+        <div class="card wide"><h3>MMR Movement From Starting Point</h3><p class="cap">How far each player's MMR has moved away from where it started. Bigger zig-zags mean a bigger yo-yo.</p><canvas id="tierDev" class="h340"></canvas></div>
       </div>
-      <div class="net-cols">
-        <div class="panel"><h3>Diagram 1: P2P (Peer-to-Peer)</h3><canvas id="net-p2p"></canvas>
-          <p class="net-cap bad">All traffic routes through one player. Host has zero latency. No server-side cheat detection.</p>
-          <p class="muted" id="net-p2p-info" style="margin:0"></p></div>
-        <div class="panel"><h3>Diagram 2: Dedicated Server</h3><canvas id="net-ded"></canvas>
-          <p class="net-cap good">All traffic routes through infrastructure. No host advantage. Server-side validation possible.</p>
-          <p class="muted" id="net-ded-info" style="margin:0"></p></div>
+      <div class="grid3" style="margin-top:14px">
+        <div class="card"><h3 style="color:var(--blue)">Low tier (skill 33)</h3><canvas id="tier0" class="h240"></canvas></div>
+        <div class="card"><h3 style="color:var(--red)">Mid tier (skill 66)</h3><canvas id="tier1" class="h240"></canvas></div>
+        <div class="card"><h3 style="color:var(--amber)">Top tier (skill 100)</h3><canvas id="tier2" class="h240"></canvas></div>
+      </div>
+    </section>
+
+    <section class="tabpanel" id="tab-network">
+      <div class="mode-head"><div><h2>Network Topology</h2><span class="era">Both are dedicated servers. The difference is who gets put in the lobby.</span></div>
+        <div class="tagline" id="netWhich"></div></div>
+      <div class="grid">
+        <div class="card"><h3>No Matchmaking (Connection Only)</h3><canvas id="netFree" class="h480"></canvas>
+          <div class="netcap">All traffic routes through infrastructure. No host advantage. Server-side validation active. But no skill filtering — anyone can be in your lobby.</div></div>
+        <div class="card"><h3>Dedicated Server (With Matchmaking)</h3><canvas id="netMM" class="h480"></canvas>
+          <div class="netcap">All traffic routes through infrastructure. No host advantage. Server-side validation active. Matchmaking filters by skill — lobby composition is controlled.</div></div>
       </div>
     </section>
   </main>
 </div>
 
-<details class="model panel">
-  <summary>How the simulator itself works (plain English)</summary>
-  <ul>
-    <li>Every player has a hidden "true skill" from 1 to 100. Nobody, including the matchmaker, can see it directly.</li>
-    <li>In each match, your kills and deaths depend on how your true skill (plus a little good-day or bad-day luck, minus a small penalty for high ping) compares with the enemy team. Beat a weaker team and your K/D goes up. Face a stronger team and it goes down.</li>
-    <li>The matchmaker cannot see true skill. It builds lobbies using what it can see: your skill bracket, your MMR and your connection. How much weight each gets depends on the mode.</li>
-    <li>MMR (modes 2, 3 and 4) is updated after every match: did you do better or worse than the system expected against that lobby? The "MMR Aggressiveness" slider controls how far one match can move it.</li>
-    <li>Skill brackets only shift slowly: once every 20 matches, and only if your average K/D over those 20 was well above or below 1.0.</li>
-    <li>All randomness comes from the seed in the toolbar, so the same seed always gives the same players and the same results. Handy for recording.</li>
-  </ul>
-</details>
-
 <footer>
   <p>Data and formulas based on Activision's published whitepapers (2024), the Activision matchmaking patent (US 10,322,351), TrueSkill research by Microsoft Research, and publicly available information from Charlie Olson (former Raven Software, MMR algorithm creator).</p>
   <p>This is a simulation for educational purposes. It does not use Activision's proprietary source code.</p>
-  <p class="links">GitHub: github.com/scottymcgaming &nbsp;&middot;&nbsp; YouTube: youtube.com/@scottymcgaming</p>
+  <p class="links">GitHub: github.com/scottymcgaming &nbsp;|&nbsp; YouTube: youtube.com/@ScottyMcGaming</p>
 </footer>
 
-<div class="flash" id="flash"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-(function(){
 'use strict';
+/* =====================================================================
+   COD Matchmaking Simulator  |  Built by Scotty McGaming
+   Single file, no dependencies. All randomness is seeded.
+   ===================================================================== */
 
-/* =========================================================
-   CONSTANTS
-   ========================================================= */
-var MATCHES = 30, LOBBY = 12, POOL_SIZE = 150;
-var LOGI = 12;            // skill points per "step" of the win-chance curve
-var RATING_SCALE = 28;    // converts the K-factor into rating points on our 1-100 scale
-var FONT = 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
-var C = {green:'#00ff88',red:'#ff4444',blue:'#4488ff',amber:'#ffaa00',pink:'#ff66ff',yellow:'#ffdd33',
-         text:'#e0e0e0',muted:'#888899',grid:'#20202d',axis:'#3a3a50',bg:'#0a0a0f',panel:'#14141f'};
+/* ---------- constants ---------- */
+var POOL_SIZE = 200000;
+var MATCHES = 30;
+var LOGI = 12;            // skill-step constant for the logistic gunfight model
+var RATING_SCALE = 20;    // converts the K-factor formula into rating points on the 1-200 scale
+var FORM_SD = 6;          // match-to-match form variance (same for everyone, every mode)
+var ENC_FACTOR = 0.6;     // how much lobby spread changes who you actually bump into
+var CHEAT_BONUS = 35;
+var CHAOS = 0.06;
+var CLASSIC_CHURN = 0.2;   // baseline chance a player drifts out of a persistent lobby between matches
+var MATCH_MINUTES = 10;
 var REGIONS = ['EU-West','EU-East','NA-East','NA-West'];
-var CMP_COLORS = ['#4488ff','#ffaa00'];
+var INPUTS = ['Controller','Mouse+Keyboard'];
+var COL = {green:'#00ff88',red:'#ff4444',blue:'#4488ff',amber:'#ffaa00',pink:'#ff66ff',text:'#e0e0e0',muted:'#888899',grid:'#232333',axis:'#3a3a4e',panel:'#14141f'};
+var FONT = 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+var TAG = {SKILL:11,PING:12,REGION:13,INPUT:14,CHEAT:15,NAME:16,KD:17,KPM:18,PLAY:19,FORM:21,TEMPO:22,DRIFT:23,ENC:24,KN:25,DN:26,GF:27,LEAVE:28,TEAM:29,TIE:30};
 
-var MODES = {
-  1:{id:1,name:'SBMM Only',short:'SBMM Only',era:'Pre-2016: COD4 (2007) to Black Ops 3 (2015)',usesMMR:false,persistent:false,p2p:false,
-     skillW:1,pingW:0,teamBalance:1,
-     see:'Relatively stable, predictable match difficulty. Some variation from connection compromises, but no dramatic swings.',
-     how:'This is how matchmaking worked in older Call of Duty games, before 2016. The game looks at your overall stats — your kill/death ratio, how many kills you get per game — and puts you in a skill bracket from 1 to 10. You stay in that bracket unless your stats change dramatically over many games. Your matches feel consistent because the system isn\'t constantly adjusting after every single game.'},
-  2:{id:2,name:'SBMM + MMR',short:'SBMM + MMR',era:'2016 onwards: Infinite Warfare to present',usesMMR:true,persistent:false,p2p:false,
-     skillW:0.6,pingW:0.4,teamBalance:1,
-     see:'The classic rubber-banding. Good game, MMR spikes, harder lobby, bad game, MMR drops, easier lobby, repeat. The SBMM bracket (blue) barely moves while MMR (green) bounces. This is the system the community is actually angry about.',
-     how:'This is how matchmaking works in every Call of Duty from Infinite Warfare (2016) to the present day. On top of the old skill brackets, there\'s a second system called MMR (Matchmaking Rating) that updates after EVERY match. Have a great game? Your MMR jumps up and your next lobby is harder. Get stomped? Your MMR drops and your next lobby is easier. This creates the \'yo-yo\' effect — you swing between easy and hard lobbies constantly. The community blames SBMM for this, but SBMM has been in COD since 2007. The yo-yo is caused by MMR, which was added in 2016.'},
-  3:{id:3,name:'Open Matchmaking',short:'Open',era:'Black Ops 7: launch to Season 4',usesMMR:true,persistent:false,p2p:false,
-     skillW:0.2,pingW:0.8,teamBalance:0.2,
-     see:'Wider skill gaps in lobbies, more blowouts, and MMR still rubber-banding underneath. The top players have fun, the bottom players get destroyed, and the middle gets whiplash.',
-     how:'This is Open Matchmaking, as used in Black Ops 7 from launch until Season 4. The old skill brackets are dialled way back — skill is \'minimally considered\' when building lobbies. Sounds great, right? The problem is MMR is still running underneath, still tracking your performance, still adjusting after every match. The result? Wider skill gaps in lobbies, more blowouts, and the yo-yo effect actually gets WORSE for average players. Activision\'s own data showed 32.7% higher quit rates and 59.2% more \'Not Fun\' ratings under this system.'},
-  4:{id:4,name:'Classic Matchmaking',short:'Classic',era:'Black Ops 7 Season 5 / MW4: "inspired by" BO1 and BO2',usesMMR:true,persistent:true,p2p:false,
-     skillW:0.4,pingW:0.6,teamBalance:0.6,
-     see:'Feels slightly better because the lobby sticks together and you learn your opponents, but MMR is still running. The yo-yo is only dampened by familiarity. A cosmetic change over the same engine.',
-     how:'This is Classic Matchmaking, introduced in Black Ops 7 Season 5 and used in Modern Warfare 4. Activision said it was \'inspired by\' Black Ops 1 and 2, but it\'s not the same thing. It keeps your lobby together between matches instead of disbanding and rebuilding — which feels better because you learn your opponents\' playstyles. But MMR is still running underneath. The only change is the lobby persists. It feels like a fix, but it\'s a placebo. The matchmaking engine underneath is identical.'},
-  5:{id:5,name:'True P2P Legacy',short:'P2P Legacy',era:'COD4 / MW2 / Black Ops 1 and 2 era',usesMMR:false,persistent:true,p2p:true,
-     skillW:0.15,pingW:0.85,teamBalance:0.4,
-     see:'Stable matches with no yo-yo, but host advantage is real (watch your K/D when YOU are host), host migrations interrupt games, and nothing on a central server checks for cheats.',
-     how:'This is how matchmaking actually worked in COD4, Modern Warfare 2, and the original Black Ops games. No MMR. Basic skill brackets. One player in the lobby IS the server — everyone connects directly to them. That player has zero ping, giving them a real advantage. If they leave, the game pauses for host migration. And because there\'s no central server validating what\'s happening, there\'s no server-side anti-cheat. This is what people are actually asking for when they say \'go back to the old system.\' The trade-off: stable matches with no yo-yo, but host advantage and no cheat protection.'}
-};
+var SEED = 1337;
 
-/* =========================================================
-   SEEDED RANDOMNESS
-   ========================================================= */
-function hashStr(str){
-  var h = 2166136261 >>> 0;
-  for (var i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
-  h ^= h >>> 16; h = Math.imul(h, 2246822507); h ^= h >>> 13; h = Math.imul(h, 3266489909); h ^= h >>> 16;
-  return (h >>> 0) || 1;
-}
-function makeRng(seed){
-  var a = hashStr(String(seed));
-  function next(){
+/* ---------- seeded randomness ---------- */
+function mulberry32(a){
+  return function(){
     a |= 0; a = (a + 0x6D2B79F5) | 0;
     var t = Math.imul(a ^ (a >>> 15), 1 | a);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function mix32(h){
+  h ^= h >>> 16; h = Math.imul(h, 0x7feb352d);
+  h ^= h >>> 15; h = Math.imul(h, 0x846ca68b);
+  h ^= h >>> 16; return h >>> 0;
+}
+/* deterministic random number from (seed, a, b, c, d) */
+function hrand(a,b,c,d){
+  var h = mix32((SEED ^ 0x9e3779b9) | 0);
+  h = mix32(h ^ (a | 0));
+  h = mix32((h + Math.imul(b | 0, 0x85ebca6b)) | 0);
+  h = mix32(h ^ Math.imul(((c | 0) + 1), 0xc2b2ae35));
+  h = mix32((h + Math.imul(((d | 0) + 7), 0x27d4eb2f)) | 0);
+  return h / 4294967296;
+}
+function hnormal(a,b,c,d){
+  var u = Math.max(1e-12, hrand(a,b,c,d*2)), v = hrand(a,b,c,d*2+1);
+  return Math.sqrt(-2*Math.log(u)) * Math.cos(2*Math.PI*v);
+}
+
+/* ---------- helpers ---------- */
+function clamp(v,a,b){ return v < a ? a : v > b ? b : v; }
+function logistic(x){ return 1/(1+Math.exp(-x)); }
+function avg(a){ if(!a.length) return 0; var s=0; for(var i=0;i<a.length;i++) s+=a[i]; return s/a.length; }
+function sd(a){ if(a.length<2) return 0; var m=avg(a), s=0; for(var i=0;i<a.length;i++) s+=(a[i]-m)*(a[i]-m); return Math.sqrt(s/(a.length-1)); }
+function bracketOf(s){ return clamp(Math.ceil(s/10),1,10); }
+function bracketMid(b){ return b*10-4.5; }
+function pct(v){ return (v*100).toFixed(1)+'%'; }
+function el(id){ return document.getElementById(id); }
+function fmt1(v){ return v==null ? 'n/a' : v.toFixed(1); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function pingColour(p){ return p < 30 ? COL.green : p < 60 ? '#ffee44' : p < 90 ? '#ff8c1a' : COL.red; }
+function onlineWeight(s){ return 0.55 + 0.45*(s/100); }   // better players play more hours, so they are online more often
+function dampOf(s){ return 1 - 0.4*(Math.abs(s-50)/50); }
+function kStrength(s, protect){
+  var damp = dampOf(s);
+  var prot = (protect && s < 50) ? Math.max(0.25, 1 - 2*(50-s)/50) : 1;
+  return damp*prot;
+}
+
+/* ---------- virtual player pool ---------- */
+var POOL = null;
+var NAME_CORES = ['Shadow','NoScope','Ghost','Viper','Reaper','Blaze','Frost','Havoc','Rogue','Toxic','Sniper','Phantom','Raptor','Nova','Jinx','Static','Venom','Wolf','Drift','Bolt','Hex','Onyx','Kraken','Ember','Pixel','Turbo','Sarge','Clutch','Nade','Camper','Quickscope','Tactical','Spectre','Ronin','Zero','Apex','Recon','Glitch','Cobra','Bandit','Dusk','Titan','Sleeper','Flank','Lurk','Vortex','Spud','Brick'];
+var NAME_FIRST = ['Dan','Jay','Mo','Liam','Kai','Sam','Leo','Zak','Tom','Ash','Ben','Rhys','Jack','Finn','Max','Ollie','Jess','Nia','Ellie','Raj','Cal','Ty','Sol','Gaz'];
+var NAME_PRE = ['x','The','Mr','Lil','Big','i','Its','Not','Sir','Dr'];
+function nameOf(id){
+  var r = function(k){ return hrand(id,TAG.NAME,k,0); };
+  var core = NAME_CORES[Math.floor(r(1)*NAME_CORES.length)];
+  var first = NAME_FIRST[Math.floor(r(2)*NAME_FIRST.length)];
+  var pre = NAME_PRE[Math.floor(r(3)*NAME_PRE.length)];
+  var n2 = ('0'+Math.floor(r(4)*100)).slice(-2), n3 = Math.floor(r(5)*900+100);
+  switch(Math.floor(r(0)*7)){
+    case 0: return pre+core+'_'+n2;
+    case 1: return core+'_'+first;
+    case 2: return 'xX'+core+'Xx';
+    case 3: return core+n3;
+    case 4: return first+core;
+    case 5: return 'TTV_'+core;
+    default: return core+'_'+n2;
   }
+}
+/* every player's base stats are derived from their ID and the seed */
+function derivedSkill(id){ return clamp(50 + 15*hnormal(id,TAG.SKILL,0,0), 1, 100); }
+function derivedPing(id){
+  var r = hrand(id,TAG.PING,0,0), r2 = hrand(id,TAG.PING,1,0);
+  return Math.round(r < 0.2 ? 15+15*r2 : r < 0.8 ? 30+30*r2 : r < 0.95 ? 60+30*r2 : 90+30*r2);
+}
+function derivedRegion(id){ var r = hrand(id,TAG.REGION,0,0); return r < 0.3 ? 0 : r < 0.5 ? 1 : r < 0.8 ? 2 : 3; }
+
+function generatePool(){
+  var t0 = performance.now();
+  var N = POOL_SIZE;
+  var skill = new Float32Array(N), ping = new Uint8Array(N), region = new Uint8Array(N), input = new Uint8Array(N), cheat = new Uint8Array(N);
+  for(var i=0;i<N;i++){
+    var id = i+1;
+    skill[i] = derivedSkill(id);
+    ping[i] = derivedPing(id);
+    region[i] = derivedRegion(id);
+    input[i] = hrand(id,TAG.INPUT,0,0) < 0.62 ? 0 : 1;
+    cheat[i] = hrand(id,TAG.CHEAT,0,0) < 0.005 ? 1 : 0;
+  }
+  var order = new Uint32Array(N);
+  for(i=0;i<N;i++) order[i]=i;
+  order.sort(function(a,b){ return skill[a]-skill[b]; });
+  var sorted = new Float32Array(N);
+  for(i=0;i<N;i++) sorted[i]=skill[order[i]];
+  var bc = [0,0,0,0,0,0,0,0,0,0];
+  for(i=0;i<N;i++) bc[bracketOf(skill[i])-1]++;
+  POOL = {skill:skill,ping:ping,region:region,input:input,cheat:cheat,order:order,sorted:sorted,
+          bracketCounts:bc,p30:sorted[Math.floor(N*0.3)],p90:sorted[Math.floor(N*0.9)],ms:performance.now()-t0};
+}
+function lowerBound(arr,x){ var lo=0,hi=arr.length; while(lo<hi){ var m=(lo+hi)>>>1; if(arr[m]<x) lo=m+1; else hi=m; } return lo; }
+
+/* full player object, only built for players who actually enter a lobby */
+function makePlayer(id,opt){
+  var i = id-1, s = POOL.skill[i];
   return {
-    next: next,
-    range: function(lo,hi){ return lo + (hi-lo)*next(); },
-    int: function(lo,hi){ return Math.floor(lo + (hi-lo+1)*next()); },
-    pick: function(arr){ return arr[Math.floor(next()*arr.length)]; },
-    chance: function(p){ return next() < p; },
-    normal: function(m,s){ var u=0; while(u===0) u=next(); var v=next(); return m + s*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+    id:id, name:nameOf(id), trueSkill:s, mmr:s, sbmmBracket:bracketOf(s),
+    kd: s/50*(0.8+0.4*hrand(id,TAG.KD,0,0)),
+    killsPerMatch: Math.round((8 + s*0.18)*(0.85+0.3*hrand(id,TAG.KPM,0,0))),
+    ping:POOL.ping[i], region:REGIONS[POOL.region[i]], inputDevice:INPUTS[POOL.input[i]],
+    cheat: !!(opt.cheaters && POOL.cheat[i]), recentPerformance:[], quitProbability:0.05
   };
 }
 
-/* =========================================================
-   HELPERS
-   ========================================================= */
-function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
-function mean(a){ if(!a.length) return 0; var s=0; for(var i=0;i<a.length;i++) s+=a[i]; return s/a.length; }
-function sd(a){ if(a.length<2) return 0; var m=mean(a), s=0; for(var i=0;i<a.length;i++) s+=(a[i]-m)*(a[i]-m); return Math.sqrt(s/(a.length-1)); }
-function logistic(x){ return 1/(1+Math.exp(-x)); }
-function bracketOf(s){ return clamp(Math.ceil(s/10), 1, 10); }
-function bracketMid(b){ return b*10 - 5; }
-function continent(r){ return r.slice(0,2); }
-function regionPen(a,b){ return a===b ? 0 : (continent(a)===continent(b) ? 20 : 75); }
-function effDed(p, dc){ return p.ping + regionPen(p.region, dc); }
-function p2pPing(p, host){ if(p===host || p.id===host.id) return 0; return Math.round(0.6*p.ping + 0.6*host.ping + 10 + 0.8*regionPen(p.region, host.region)); }
-function pingColor(ms){ return ms < 30 ? C.green : ms < 60 ? C.yellow : ms < 90 ? C.amber : C.red; }
-function fmt(v,d){ return (v==null||isNaN(v)) ? '-' : Number(v).toFixed(d==null?2:d); }
-function pct(v){ return (v==null||isNaN(v)) ? '-' : Math.round(v*100)+'%'; }
-function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-function $(id){ return document.getElementById(id); }
-
-/* =========================================================
-   STATE
-   ========================================================= */
-var state = {
-  seed:'scotty',
-  you:{skill:55, kd:1.10, kdAuto:true, region:'EU-West', input:'Controller', ping:30},
-  vol:0.15, showBracket:true, party:false, cheaters:true,
-  speed:500, instant:false, view:'m1', cmpA:1, cmpB:2,
-  timer:null, basePool:null, runs:{}, pop:null, net:null, netCount:0
+/* ---------- mode definitions ---------- */
+var MODE_CFG = {
+  1:{title:'SBMM Only', era:'Pre-2016 COD style (COD4 2007 to Black Ops 3 2015)', usesMMR:false, hasSBMM:true,
+     tagline:'Static skill brackets. No MMR. Your lobbies stay consistent from match to match.'},
+  2:{title:'SBMM + MMR', era:'Current COD, 2016 onwards (Infinite Warfare to present)', usesMMR:true, hasSBMM:true, window:9, skillW:0.65, pingW:0.35, drift:6,
+     tagline:'Skill brackets plus an MMR that recalculates after every single match. Watch the green line.'},
+  3:{title:'Open Matchmaking', era:'Black Ops 7 launch to Season 4', usesMMR:true, hasSBMM:true, window:30, skillW:0.2, pingW:0.8, drift:14, teamSkillW:0.25,
+     tagline:'Skill barely considered when building lobbies. MMR still running underneath, unchanged.'},
+  4:{title:'Classic Matchmaking', era:'Black Ops 7 Season 5 / MW4 ("inspired by" BO1 and BO2)', usesMMR:true, hasSBMM:true, window:10, skillW:0.4, pingW:0.6, drift:6, persistent:true,
+     tagline:'Lobbies persist between matches. The same MMR engine runs underneath.'},
+  5:{title:'No SBMM', era:'What the community is actually asking for', usesMMR:false, hasSBMM:false,
+     tagline:'Connection only. No brackets, no MMR, no protection.'}
+};
+var INFO = {
+  1:"This is how matchmaking worked in older Call of Duty games, before 2016. The game looks at your overall stats — your kill/death ratio, how many kills you get per game — and puts you in a skill bracket from 1 to 10. You stay in that bracket unless your stats change dramatically over many games. Your matches feel consistent because the system isn't constantly adjusting after every single game.",
+  2:"This is how matchmaking works in every Call of Duty from Infinite Warfare (2016) to the present day. On top of the old skill brackets, there's a second system called MMR (Matchmaking Rating) that updates after EVERY match. Have a great game? Your MMR jumps up and your next lobby is harder. Get stomped? Your MMR drops and your next lobby is easier. This creates the 'yo-yo' effect — you swing between easy and hard lobbies constantly. The community blames SBMM for this, but SBMM has been in COD since 2007. The yo-yo is caused by MMR, which was added in 2016.",
+  3:"This is Open Matchmaking, as used in Black Ops 7 from launch until Season 4. The old skill brackets are dialled way back — skill is 'minimally considered' when building lobbies. Sounds great, right? The problem is MMR is still running underneath, still tracking your performance, still adjusting after every match. The result? Wider skill gaps in lobbies, more blowouts, and the yo-yo effect actually gets WORSE for average players. Activision's own data showed 32.7% higher quit rates and 59.2% more 'Not Fun' ratings under this system.",
+  4:"This is Classic Matchmaking, introduced in Black Ops 7 Season 5 and used in Modern Warfare 4. Activision said it was 'inspired by' Black Ops 1 and 2, but it's not the same thing. It keeps your lobby together between matches instead of disbanding and rebuilding — which feels better because you learn your opponents' playstyles. But MMR is still running underneath. The only change is the lobby persists. It feels like a fix, but it's a placebo. The matchmaking engine underneath is identical.",
+  5:"This is what it would actually look like if Activision removed all skill-based matchmaking. No SBMM brackets. No MMR. No skill consideration at all. The matchmaker finds the best connection and throws everyone in together. No yo-yo, because there's nothing adjusting your lobbies between matches. But no protection either. A 0.66 KD casual can land in a lobby with a 2.0 KD grinder, and that happens regularly because the system isn't trying to prevent it. The top players love it — every lobby is a pub stomp. The bottom players hate it — every lobby is a death sentence. And the middle? They get the same random spread as everyone else, which means their experience is entirely dependent on who happens to be searching at the same time. This is what 'remove SBMM' actually means. Not better matchmaking. No matchmaking."
+};
+var LOOK_FOR = {
+  1:'Blue line: the bracket the matchmaker uses for you. It stays flat. Amber: how strong each lobby was. Notice how little it moves.',
+  2:'Green line: your MMR. It zig-zags after every match. Blue line: your SBMM bracket, which barely moves. The yo-yo is the green line, not the blue one.',
+  3:'Still zig-zagging. Lobbies are looser (amber jumps around more) but the MMR rubber band is exactly where it was.',
+  4:'MMR still moves every match. The lobby only partly follows it because most players stay, which softens the feel, not the engine.',
+  5:'Grey line: flat, because no rating exists. Amber: lobby strength is now pure luck of who was searching.'
 };
 
-/* =========================================================
-   PLAYER POOL
-   ========================================================= */
-var PREFIX = ['x','Xx','','','','','The','Mr','Lil','iTz','oG','Sir','Big','','Dr'];
-var CORE = ['Shadow','NoScope','Ghost','Viper','Reaper','Sniper','Frost','Blaze','Havoc','Rogue','Venom','Phantom','Wolf','Titan','Recon',
-  'Bullet','Savage','Storm','Nova','Raptor','Echo','Kilo','Dusty','Toxic','Jolt','Hex','Onyx','Pyro','Zero','Apex','Drift','Cobra',
-  'Static','Rook','Grim','Slayer','Quick','Silent','Camper','Tactical','Quickscope','Stim','Claymore','Nuke','Spectre','Sledge','Bravo','Tango'];
-var SUFFIX = ['_97','_Dan','_x','99','_TTV','_UK','420','_Gaming','_YT','_07','x','_Pro','_Jr','_88','_EU','_NA','','','_Kev','_Gaz','_Sam','_01','_Az','_Lad'];
-function makeName(rng){ var n = rng.pick(PREFIX) + rng.pick(CORE) + rng.pick(SUFFIX); return n.length > 15 ? n.slice(0,15) : n; }
-
-function genPool(){
-  var rng = makeRng(state.seed + '|pool');
-  var used = {YOU:1}, players = [];
-  for (var id=1; id<=POOL_SIZE; id++){
-    var ts = clamp(Math.round(rng.normal(50,15)), 1, 100);
-    var name, guard=0; do { name = makeName(rng); guard++; if(guard>20) name += id; } while(used[name]); used[name]=1;
-    var r = rng.next();
-    var ping = Math.round(r < 0.2 ? rng.range(15,30) : r < 0.85 ? rng.range(30,60) : rng.range(60,120));
-    players.push({
-      id:id, name:name, trueSkill:ts, mmr:ts, sbmmBracket:bracketOf(ts),
-      kd:+(ts/50*rng.range(0.8,1.2)).toFixed(2),
-      killsPerMatch:+(ts/100*16.5*rng.range(0.8,1.2)).toFixed(1),
-      ping:ping, region:rng.pick(REGIONS), inputDevice: rng.chance(0.62) ? 'Controller' : 'Mouse+Keyboard',
-      recentPerformance:[], quitProbability:0.04, kdHistory:[], together:0, cheating:false, isYou:false
-    });
+/* ---------- lobby building ---------- */
+function gather(rng, lo, hi, you, maxPd, need, exclude, seen){
+  var a = lowerBound(POOL.sorted, lo), b = lowerBound(POOL.sorted, hi + 1e-6);
+  var out = [];
+  if(b <= a || need <= 0) return out;
+  var tries = 0, maxTries = need*80;
+  while(out.length < need && tries < maxTries){
+    tries++;
+    var idx = POOL.order[a + Math.floor(rng()*(b-a))], id = idx+1;
+    if(id === 1 || exclude.has(id) || seen.has(id)) continue;
+    if(POOL.region[idx] !== you.regionIdx) continue;
+    if(Math.abs(POOL.ping[idx] - you.ping) > maxPd) continue;
+    if(rng() > onlineWeight(POOL.skill[idx])) continue;   // is this player online and searching right now?
+    seen.add(id); out.push(id);
   }
-  applyYouTo(players[0]);
-  state.basePool = players;
-}
-function applyYouTo(p){
-  var y = state.you;
-  if (y.kdAuto) y.kd = +(y.skill/50).toFixed(2);
-  p.name = 'YOU'; p.isYou = true; p.trueSkill = y.skill; p.kd = y.kd;
-  // The old-style system only sees your stats, so your bracket comes from a mix of skill and K/D.
-  var est = clamp(Math.round(0.5*y.skill + 0.5*y.kd*50), 1, 100);
-  p.statSkill = est; p.sbmmBracket = bracketOf(est); p.mmr = est;
-  p.ping = y.ping; p.region = y.region; p.inputDevice = y.input;
-  p.killsPerMatch = +(y.skill/100*16.5).toFixed(1);
-}
-function clonePool(src){
-  return src.map(function(p){ var q = {}; for (var k in p) q[k]=p[k]; q.recentPerformance=p.recentPerformance.slice(); q.kdHistory=p.kdHistory.slice(); return q; });
+  return out;
 }
 
-/* =========================================================
-   MATCHMAKING
-   ========================================================= */
-function skillMetric(m, p){
-  if (m.id===1 || m.id===5) return bracketMid(p.sbmmBracket);
-  return 0.8*p.mmr + 0.2*bracketMid(p.sbmmBracket);   // MMR is the primary input, brackets still exist
-}
-function teamMetric(m, p){ return (m.id===1 || m.id===5) ? bracketMid(p.sbmmBracket) : p.mmr; }
-
-// Pick `need` players to join a lobby built around `anchor`.
-function buildLobby(m, anchor, pool, rng, exclude, need){
-  var dc = anchor.region, ap = effDed(anchor, dc);
-  var avail = pool.filter(function(p){ return !exclude[p.id] && p.id!==anchor.id && rng.next() < 0.65; }); // ~65% of players are searching right now
-  var chosen;
-  if (m.id === 1){
-    // Classic SBMM: same bracket first, widen by +/-1 then +/-2... Ping difference capped at 80ms, prefer within 30ms.
-    var cands = avail.filter(function(p){ return Math.abs(effDed(p,dc)-ap) <= 80; });
-    var ab = anchor.sbmmBracket, pick = [];
-    for (var e=0; e<=9; e++){ pick = cands.filter(function(p){ return Math.abs(p.sbmmBracket-ab) <= e; }); if (pick.length >= need) break; }
-    chosen = pick.map(function(p){ var pd = Math.abs(effDed(p,dc)-ap); return {p:p, k:Math.abs(p.sbmmBracket-ab)*30 + (pd<=30?0:15) + pd*0.2 + rng.next()*10}; })
-                 .sort(function(a,b){ return a.k-b.k; }).slice(0,need).map(function(o){ return o.p; });
+function pickLobby(mode, C, you, m, rng, exclude, count, mmrOf, windowOverride){
+  if(count <= 0) return {ids:[], expansion:0};
+  var seen = new Set(), cands = [], expansion = 0, score;
+  if(mode === 1){
+    var b = you.sbmmBracket;
+    for(expansion=0; expansion<=2; expansion++){
+      cands = cands.concat(gather(rng, (b-1-expansion)*10, (b+expansion)*10, you, 80, 140-cands.length, exclude, seen));
+      if(cands.length >= 60) break;
+    }
+    expansion = Math.min(expansion, 2);
+    score = function(id){ var i=id-1; return 0.6*Math.abs(bracketOf(POOL.skill[i])-b) + 0.4*Math.abs(POOL.ping[i]-you.ping)/30 + (POOL.input[i]!==you.inputIdx?0.05:0) + 0.1*hrand(id,TAG.TIE,m,mode); };
+  } else if(C.usesMMR){
+    var w = windowOverride || C.window, t = clamp(you.mmr, 2, 99);
+    cands = gather(rng, t-w, t+w, you, 80, 200, exclude, seen);
+    if(cands.length < 40){ expansion = 1; cands = cands.concat(gather(rng, t-w*2.5, t+w*2.5, you, 80, 200-cands.length, exclude, seen)); }
+    var cache = new Map();
+    cands.forEach(function(id){ cache.set(id, mmrOf(id,m)); });
+    score = function(id){ var i=id-1; return C.skillW*Math.abs(cache.get(id)-you.mmr)/10 + C.pingW*Math.abs(POOL.ping[i]-you.ping)/30 + (POOL.input[i]!==you.inputIdx?0.05:0) + 0.1*hrand(id,TAG.TIE,m,mode); };
   } else {
-    var am = skillMetric(m, anchor);
-    chosen = avail.map(function(p){
-      var c = m.skillW*Math.abs(skillMetric(m,p)-am)/4 + m.pingW*(effDed(p,dc)/20) + (p.inputDevice!==anchor.inputDevice?0.05:0) + rng.next()*0.35;
-      return {p:p, c:c};
-    }).sort(function(a,b){ return a.c-b.c; }).slice(0,need).map(function(o){ return o.p; });
+    cands = gather(rng, -1, 101, you, 80, 200, exclude, seen);
+    score = function(id){ var i=id-1; return Math.abs(POOL.ping[i]-you.ping)/30 + (POOL.input[i]!==you.inputIdx?0.05:0) + 0.15*hrand(id,TAG.TIE,m,mode); };
   }
-  if (chosen.length < need){
-    var rest = pool.filter(function(p){ return !exclude[p.id] && p.id!==anchor.id && chosen.indexOf(p)<0; });
-    while (chosen.length < need && rest.length) chosen.push(rest.splice(rng.int(0,rest.length-1),1)[0]);
+  var scored = cands.map(function(id){ return {id:id, s:score(id)}; }).sort(function(x,y){ return x.s-y.s; });
+  var ids = scored.slice(0,count).map(function(o){ return o.id; });
+  if(ids.length < count){
+    var ex = new Set(exclude); ids.forEach(function(id){ ex.add(id); });
+    ids = ids.concat(gather(rng, -1, 101, you, 120, count-ids.length, ex, seen));
+    expansion = 3;
   }
-  return chosen;
+  return {ids:ids, expansion:expansion};
 }
 
-function assignTeams(lobby, m, rng, partyIds){
-  if (partyIds){ lobby.forEach(function(p){ p._team = partyIds.indexOf(p.id) >= 0 ? 1 : 0; }); return; }
-  var w = m.teamBalance;
-  var keyed = lobby.map(function(p){ return {p:p, k: w*teamMetric(m,p) + (1-w)*rng.range(0,100) + rng.range(-1.5,1.5)}; })
-                   .sort(function(a,b){ return b.k-a.k; });
-  var snake = [0,1,1,0,0,1,1,0,0,1,1,0];
-  keyed.forEach(function(o,i){ o.p._team = snake[i]; });
-}
+/* ---------- the simulation ---------- */
+function simulate(mode, Y, opt){
+  var C = MODE_CFG[mode];
+  var rng = mulberry32(((SEED >>> 0) ^ Math.imul(mode, 0x9E3779B1)) >>> 0);
+  var you = {id:1, name:'YOU', trueSkill:Y.skill, ping:Y.ping, region:Y.region, regionIdx:REGIONS.indexOf(Y.region),
+             inputDevice:Y.input, inputIdx:INPUTS.indexOf(Y.input), isYou:true, cheat:false, recentPerformance:[], quitProbability:0};
+  var est = clamp(Y.kd*50, 1, 100);           // the system's first guess at your skill, from your K/D
+  you.mmr = est; you.sbmmBracket = bracketOf(est); you.kd = Y.kd;
+  var players = new Map();
+  function getP(id){ var p = players.get(id); if(!p){ p = makePlayer(id,opt); players.set(id,p); } return p; }
+  function mmrOf(id,m){ var s = POOL.skill[id-1]; return clamp(s + C.drift*dampOf(s)*hnormal(id,TAG.DRIFT,m,0), 1, 200); }
+  var kStr = kStrength(Y.skill, opt.protect);
+  var records = [], prev = null, party = null, kdHistory = [];
 
-function pickHost(lobby, rng){
-  // "Best connection": lowest ping plus noise for upload speed / NAT type
-  var best=null, bk=1e9;
-  lobby.forEach(function(p){ var k = p.ping + rng.range(0,30); if (k < bk){ bk=k; best=p; } });
-  return best;
-}
-
-/* =========================================================
-   MATCH ENGINE
-   ========================================================= */
-function simulateMatch(lobby, m, rng, o){
-  var t = rng.next(); // match tempo: how many fights happen
-  var fam = o.fam || 0;
-  var rows = lobby.map(function(p){
-    var ep;
-    if (m.p2p){ ep = p2pPing(p, o.host); if (o.newHost) ep = Math.round((ep + p2pPing(p, o.newHost))/2); }
-    else ep = effDed(p, o.dc);
-    var formSd = 1.5*(1 - 0.35*fam);
-    var s = p.trueSkill + rng.normal(0, formSd) - ep/10;
-    if (p.cheating) s += 35;
-    if (o.partyIds && o.partyIds.indexOf(p.id) >= 0) s += 4;
-    if (o.newHost) s -= 1.5;
-    // How hard a player is to beat also depends on the lobby they were sorted into: the matchmaker's
-    // rating ("relevant skill metric") reflects recent form, so opponents are judged on a blend of both.
-    var str = s + 0.5*((m.usesMMR ? p.mmr : bracketMid(p.sbmmBracket)) - p.trueSkill);
-    return {p:p, ep:ep, s:s, str:str, team:p._team};
-  });
-  var avg = [0,1].map(function(tm){ return mean(rows.filter(function(r){ return r.team===tm; }).map(function(r){ return r.str; })); });
-  var kn = 0.05*(1 - 0.3*fam);
-  rows.forEach(function(r){
-    var gap = r.s - avg[1-r.team];
-    var q = logistic(gap / LOGI);                 // chance of winning any single gunfight
-    var E = (22 + 20*t) * rng.range(0.9, 1.1);    // gunfights taken this match
-    r.kills = Math.max(1, Math.round(E*q*rng.range(1-kn,1+kn)));
-    r.deaths = Math.max(1, Math.round(E*(1-q)*rng.range(1-kn,1+kn)));
-    r.kd = r.kills / r.deaths;
-  });
-  var score = [0,1].map(function(tm){ return rows.filter(function(r){ return r.team===tm; }).reduce(function(s,r){ return s+r.kills; }, 0); });
-  var winner = score[0] > score[1] ? 0 : score[1] > score[0] ? 1 : (rng.next() < 0.5 ? 0 : 1);
-  if (score[0] === score[1]) score[winner] += 1;
-  var blowout = Math.max(score[0],score[1]) >= 2*Math.min(score[0],score[1]);
-  return {rows:rows, score:score, winner:winner, blowout:blowout};
-}
-
-// MMR update: performance vs what the system expected, scaled by the K-factor (Glicko-style with COD-like volatility)
-function updateMMR(rows, vol, fam){
-  var oppM = [0,1].map(function(tm){ return mean(rows.filter(function(r){ return r.team===tm; }).map(function(r){ return r.p.mmr; })); });
-  rows.forEach(function(r){
-    r.mmrBefore = r.p.mmr;
-    var matchPerformance = r.kills / (r.kills + r.deaths);                       // K/D expressed as share of fights won (K/D 1.0 = 0.5)
-    var expectedPerformance = logistic((r.p.mmr - oppM[1-r.team]) / LOGI);       // what your MMR says you should do vs this lobby
-    var performanceDelta = (matchPerformance - expectedPerformance) * (1 - 0.5*(fam||0)); // Classic: familiar opponents make results a bit more predictable
-    var kFactor = 32 * vol * (1 + Math.abs(performanceDelta)) * RATING_SCALE;
-    var change = 30*Math.tanh(kFactor*performanceDelta/30);                      // soft cap so one match cannot move more than ~30
-    r.p.mmr = clamp(r.p.mmr + change, 1, 100);
-  });
-}
-
-function postMatch(res, rng){
-  res.rows.forEach(function(r){
-    var p = r.p;
-    p.recentPerformance.push(+r.kd.toFixed(2)); if (p.recentPerformance.length > 5) p.recentPerformance.shift();
-    p.kdHistory.push(r.kd);
-    if (p.kdHistory.length % 20 === 0){   // slow bracket review every 20 matches
-      var a = mean(p.kdHistory.slice(-20));
-      if (a > 1.4) p.sbmmBracket = Math.min(10, p.sbmmBracket+1);
-      else if (a < 0.7) p.sbmmBracket = Math.max(1, p.sbmmBracket-1);
+  for(var m=0; m<MATCHES; m++){
+    var mmrBefore = you.mmr, bracketBefore = you.sbmmBracket;
+    var ids = [], stayed = new Set(), expansion = 0, r;
+    if(C.persistent && prev){
+      var keep = prev.filter(function(id){ return (party && party.has(id)) || hrand(id,TAG.LEAVE,m,0) >= players.get(id).quitProbability + CLASSIC_CHURN; });
+      keep.forEach(function(id){ stayed.add(id); });
+      r = pickLobby(mode, C, you, m, rng, new Set(keep), 11-keep.length, mmrOf);
+      ids = keep.concat(r.ids); expansion = r.expansion;
+    } else {
+      r = pickLobby(mode, C, you, m, rng, new Set(), 11, mmrOf);
+      ids = r.ids; expansion = r.expansion;
+      if(C.persistent && opt.party) party = new Set(ids.slice(0,5));
     }
-    var lost = r.team !== res.winner;
-    p.quitProbability = clamp(0.04 + (lost&&res.blowout?0.14:0) + (r.kd<0.6?0.08:0) + (r.kd<0.4?0.06:0) + (lost?0.03:0), 0, 0.9);
-    r.quit = !p.isYou && rng.chance(p.quitProbability);
-  });
-}
-
-/* =========================================================
-   RUNS (one 30-match simulation per mode)
-   ========================================================= */
-function makeRun(mode){
-  var pool = clonePool(state.basePool), m = MODES[mode], you = pool[0];
-  return {mode:mode, pool:pool, rng:makeRng(state.seed+'|match'), results:[], selected:-1,
-          ctx:{lobbyIds:null, hostId:null, partyIds:null, prevIds:null},
-          startRating: m.usesMMR ? you.mmr : bracketMid(you.sbmmBracket),
-          startBracket: bracketMid(you.sbmmBracket)};
-}
-function getRun(mode){ if (!state.runs[mode]) state.runs[mode] = makeRun(mode); return state.runs[mode]; }
-function resetRun(mode){ state.runs[mode] = makeRun(mode); }
-function resimulate(modes){
-  modes.forEach(function(md){
-    var n = state.runs[md] ? state.runs[md].results.length : 0;
-    state.runs[md] = makeRun(md);
-    for (var i=0;i<n;i++) stepRun(state.runs[md]);
-  });
-}
-
-function stepRun(run){
-  if (run.results.length >= MATCHES) return false;
-  var m = MODES[run.mode], pool = run.pool, rng = run.rng, you = pool[0], ctx = run.ctx, dc = you.region;
-  var prev = {}; (ctx.prevIds||[]).forEach(function(id){ prev[id]=1; });
-  var lobby, i;
-
-  if (m.persistent && ctx.lobbyIds){
-    lobby = ctx.lobbyIds.map(function(id){ return pool[id-1]; });
-  } else {
-    lobby = [you]; ctx.hostId = null; ctx.partyIds = null;
-    if (m.id===4 && state.party){
-      var party = pool.filter(function(p){ return !p.isYou; })
-        .map(function(p){ return {p:p, k:Math.abs(p.mmr-(you.mmr+8)) + rng.next()*3}; })
-        .sort(function(a,b){ return a.k-b.k; }).slice(0,6).map(function(o){ return o.p; });
-      ctx.partyIds = party.map(function(p){ return p.id; });
-      lobby = lobby.concat(party);
-    }
-  }
-  if (!m.persistent) pool.forEach(function(p){ p.together = 0; });
-  var need = LOBBY - lobby.length;
-  if (need > 0){
-    var ex = {}; lobby.forEach(function(p){ ex[p.id]=1; });
-    var add = buildLobby(m, you, pool, rng, ex, need);
-    add.forEach(function(p){ p.together = 0; p.cheating = !!(m.p2p && state.cheaters && rng.chance(0.025)); });
-    lobby = lobby.concat(add);
-  }
-
-  var host=null, newHost=null, migration=null;
-  if (m.p2p){
-    // The lobby re-picks a host before each match (the old host often keeps it), so hosting moves around
-    var keep = ctx.hostId && lobby.some(function(p){ return p.id===ctx.hostId; }) && rng.chance(0.5);
-    if (!keep) ctx.hostId = pickHost(lobby, rng).id;
-    host = pool[ctx.hostId-1];
-    if (!host.isYou && rng.chance(0.06 + host.quitProbability*0.8)){
-      newHost = pickHost(lobby.filter(function(p){ return p!==host; }), rng);
-      migration = {from:host.name, to:newHost.name, pause:rng.int(3,5)};
-    }
-  }
-  assignTeams(lobby, m, rng, ctx.partyIds);
-  var fam = m.id===4 ? mean(lobby.filter(function(p){ return !p.isYou; }).map(function(p){ return Math.min(p.together,5)/5; })) : 0;
-  var lobbyMMRsd = sd(lobby.map(function(p){ return p.mmr; }));
-
-  var res = simulateMatch(lobby, m, rng, {dc:dc, host:host, newHost:newHost, fam:fam, partyIds:ctx.partyIds});
-  if (m.usesMMR) updateMMR(res.rows, state.vol, fam); else res.rows.forEach(function(r){ r.mmrBefore = r.p.mmr; });
-  var youBracketBefore = you.sbmmBracket;
-  postMatch(res, rng);
-
-  var yr = res.rows.filter(function(r){ return r.p.isYou; })[0];
-  var others = res.rows.filter(function(r){ return !r.p.isYou; });
-  var curIds = {}; lobby.forEach(function(p){ curIds[p.id]=1; });
-  var left = (ctx.prevLobby||[]).filter(function(x){ return !curIds[x.id]; }).map(function(x){ return x.name; });
-
-  var rec = {
-    n: run.results.length + 1,
-    rows: res.rows.map(function(r){ return {
-      id:r.p.id, name:r.p.name, team:r.team, trueSkill:r.p.trueSkill, mmr:r.mmrBefore, mmrAfter:r.p.mmr,
-      bracket:r.p.sbmmBracket, ping:r.ep, kills:r.kills, deaths:r.deaths, kd:r.kd, isYou:r.p.isYou,
-      isHost: !!(host && r.p===host), isNewHost: !!(newHost && r.p===newHost), cheater:r.p.cheating,
-      party: !!(ctx.partyIds && ctx.partyIds.indexOf(r.p.id)>=0),
-      status: r.p.isYou ? 'you' : (prev[r.p.id] ? 'stayed' : 'new'), quit:r.quit }; }),
-    youTeam: yr.team, yourScore: res.score[yr.team], enemyScore: res.score[1-yr.team], win: res.winner===yr.team,
-    youKills: yr.kills, youDeaths: yr.deaths, youKD: yr.kd, youPing: yr.ep,
-    ratingBefore: m.usesMMR ? yr.mmrBefore : bracketMid(youBracketBefore),
-    ratingAfter: m.usesMMR ? you.mmr : bracketMid(you.sbmmBracket),
-    bracketAfter: bracketMid(you.sbmmBracket), bracket: you.sbmmBracket,
-    lobbyAvg: mean(others.map(function(r){ return r.p.trueSkill; })),
-    lobbySD: sd(res.rows.map(function(r){ return r.p.trueSkill; })),
-    oppAvg: mean(res.rows.filter(function(r){ return r.team!==yr.team; }).map(function(r){ return r.p.trueSkill; })),
-    lobbyMMRsd: lobbyMMRsd,
-    avgPing: mean(res.rows.map(function(r){ return r.ep; })),
-    blowout: res.blowout,
-    host: host ? host.name : null, youHost: !!(host && host.isYou), migration: migration,
-    cheater: res.rows.some(function(r){ return r.p.cheating; }),
-    quits: others.filter(function(r){ return r.quit; }).length,
-    fam: fam,
-    perceived: clamp(35 + 55*fam - (res.blowout?10:0), 0, 100),
-    actual: clamp(100 - 4*lobbyMMRsd, 0, 100),
-    stayed: m.persistent ? others.filter(function(r){ return prev[r.p.id]; }).length : null,
-    left: left
-  };
-  run.results.push(rec); run.selected = -1;
-
-  ctx.prevIds = lobby.map(function(p){ return p.id; });
-  ctx.prevLobby = lobby.map(function(p){ return {id:p.id, name:p.name}; });
-  if (m.persistent){
-    var stay = lobby.filter(function(p){
-      if (p.isYou) return true;
-      if (ctx.partyIds && ctx.partyIds.indexOf(p.id) >= 0) return true;
-      if (host && p===host) return !migration;   // the host only leaves by quitting mid-match (host migration)
-      var r = res.rows.filter(function(x){ return x.p===p; })[0];
-      return !(r.quit || rng.chance(p.cheating ? 0.15 : 0.06));
+    var members = [you].concat(ids.map(getP));
+    members.forEach(function(p){
+      p.mmrNow = C.usesMMR ? (p.isYou ? you.mmr : mmrOf(p.id,m)) : null;
+      p.bracketNow = p.isYou ? you.sbmmBracket : bracketOf(p.trueSkill);
     });
-    if (migration) ctx.hostId = newHost.id;
-    stay.forEach(function(p){ p.together++; });
-    ctx.lobbyIds = stay.map(function(p){ return p.id; });
+
+    /* team assignment */
+    var team = new Array(members.length);
+    if(party){
+      members.forEach(function(p,i){ team[i] = (p.isYou || party.has(p.id)) ? 0 : 1; });
+    } else {
+      var metric = function(p){
+        if(mode === 1) return p.bracketNow + p.trueSkill/1000;
+        if(C.teamSkillW) return C.teamSkillW*p.mmrNow + (1-C.teamSkillW)*100*hrand(p.id,TAG.TEAM,m,mode);   // skill minimally considered
+        if(C.usesMMR) return p.mmrNow;
+        return 0.2*p.trueSkill + 0.8*100*hrand(p.id,TAG.TEAM,m,mode);   // mostly random
+      };
+      var ord = members.map(function(p,i){ return i; }).sort(function(a,b){ return metric(members[b])-metric(members[a]); });
+      var snake = [0,1,1,0,0,1,1,0,0,1,1,0];
+      ord.forEach(function(idx,k){ team[idx] = snake[k % 12]; });
+    }
+
+    /* match: logistic gunfight model */
+    var tempo = hrand(0,TAG.TEMPO,m,0);
+    var fam = (C.persistent && m > 0) ? stayed.size/11 : 0;   // familiar opponents make results a little more predictable
+    var eff = members.map(function(p){ return p.trueSkill + FORM_SD*(1-0.3*fam)*hnormal(p.id,TAG.FORM,m,0) - p.ping/10 + (p.cheat ? CHEAT_BONUS : 0); });
+    var ts = [0,1].map(function(t){ var v = eff.filter(function(_,i){ return team[i]===t; }); return {mean:avg(v), sd:sd(v)}; });
+    var res = members.map(function(p,i){
+      var opp = ts[1-team[i]];
+      var enc = hnormal(p.id,TAG.ENC,m,0) * opp.sd * ENC_FACTOR * (1 - 0.5*fam);   // which opponents you actually bump into
+      // 6% of every gunfight is chaos (spawns, streaks, third parties), so nobody wins or loses every fight
+      var winChance = CHAOS + (1-2*CHAOS)*logistic((eff[i] - (opp.mean + enc)) / LOGI);
+      var gunfights = (22 + 20*tempo) * (0.9 + 0.2*hrand(p.id,TAG.GF,m,0));
+      var k = Math.max(1, Math.round(gunfights*winChance*(0.92+0.16*hrand(p.id,TAG.KN,m,0))));
+      var d = Math.max(1, Math.round(gunfights*(1-winChance)*(0.92+0.16*hrand(p.id,TAG.DN,m,0))));
+      return {k:k, d:d, kd:k/d};
+    });
+    var score = [0,0];
+    res.forEach(function(x,i){ score[team[i]] += x.k; });
+    var yt = team[0], ys = score[yt], os = score[1-yt];
+    var win = ys > os ? 1 : ys < os ? 0 : 0.5;
+    var blowout = Math.max(ys,os) >= 2*Math.min(ys,os);
+    var winningTeam = score[0] > score[1] ? 0 : score[1] > score[0] ? 1 : -1;
+
+    /* quit probability and recent form for everyone in the lobby */
+    var qs = [];
+    members.forEach(function(p,i){
+      var lost = winningTeam !== -1 && team[i] !== winningTeam;
+      var q = clamp(0.03 + (lost?0.05:0) + (lost&&blowout?0.25:0) + Math.max(0, 0.9-res[i].kd)*0.3, 0.02, 0.6);
+      p.quitProbability = q; qs.push(q);
+      p.recentPerformance.push(+res[i].kd.toFixed(2));
+      if(p.recentPerformance.length > 5) p.recentPerformance.shift();
+    });
+
+    /* MMR update for You (modified Glicko-style, population-scaled K-factor) */
+    var change = 0, perf = null, expected = null;
+    if(C.usesMMR){
+      var oppM = []; members.forEach(function(p,i){ if(team[i] !== yt) oppM.push(p.mmrNow); });
+      perf = res[0].k/(res[0].k+res[0].d);
+      expected = logistic((you.mmr - avg(oppM))/LOGI);
+      var delta = perf - expected;
+      var kFactor = 32 * opt.vol * kStr * (1 + Math.abs(delta)) * RATING_SCALE;
+      change = 30*Math.tanh(kFactor*delta/30);
+      you.mmr = clamp(you.mmr + change, 1, 200);
+    }
+    /* slow SBMM bracket recalculation, every 20 matches */
+    kdHistory.push(res[0].kd);
+    if(C.hasSBMM && (m+1) % 20 === 0){
+      var a20 = avg(kdHistory.slice(-20));
+      if(a20 > 1.25) you.sbmmBracket = Math.min(10, you.sbmmBracket+1);
+      else if(a20 < 0.8) you.sbmmBracket = Math.max(1, you.sbmmBracket-1);
+    }
+
+    var all = members.map(function(p){ return p.trueSkill; });
+    var sA = [], sB = []; members.forEach(function(p,i){ (team[i]===yt ? sA : sB).push(p.trueSkill); });
+    var fairActual = clamp(100 - 2.2*sd(all) - 2.5*Math.abs(avg(sA)-avg(sB)), 0, 100);
+    var fairPerceived = C.persistent ? clamp(fairActual + 30*fam, 0, 100) : fairActual;
+    records.push({
+      m:m+1,
+      lobby: members.map(function(p,i){ return {id:p.id, name:p.name, skill:p.trueSkill, mmr:p.mmrNow, bracket:bracketOf(p.trueSkill), ping:p.ping,
+        team: team[i]===yt ? 0 : 1, kills:res[i].k, deaths:res[i].d, kd:res[i].kd, isYou:!!p.isYou, stayed:stayed.has(p.id),
+        party: !!(party && party.has(p.id)), cheat:p.cheat, input:p.inputDevice, q:qs[i]}; }),
+      youSkill:Y.skill, youKills:res[0].k, youDeaths:res[0].d, youKD:res[0].kd, win:win, scoreYou:ys, scoreOpp:os, blowout:blowout,
+      lobbyAvg: avg(all.slice(1)), lobbySD: sd(all), avgPing: avg(members.map(function(p){ return p.ping; })),
+      mmrBefore:mmrBefore, mmrAfter:you.mmr, change:change, perf:perf, expected:expected, bracketBefore:bracketBefore,
+      rating: mode===1 ? bracketMid(bracketBefore) : C.usesMMR ? mmrBefore : Y.skill,
+      sbmmLine: C.hasSBMM ? bracketMid(bracketBefore) : null,
+      expansion:expansion, stayedCount:stayed.size, fam:fam, fairActual:fairActual, fairPerceived:fairPerceived, quitAvg:avg(qs)
+    });
+    prev = ids;
   }
-  return true;
+  return {mode:mode, records:records, players:players, kStr:kStr, start:est};
 }
 
-function runMetrics(run){
-  var R = run.results;
-  var ratings = [run.startRating].concat(R.map(function(r){ return r.ratingAfter; }));
-  var d = []; for (var i=1;i<ratings.length;i++) d.push(ratings[i]-ratings[i-1]);
-  var flips=0, last=0;
-  d.forEach(function(x){ if (Math.abs(x) < 0.5) return; var s = x>0?1:-1; if (last && s!==last) flips++; last = s; });
-  var n = R.length;
+/* ---------- summary statistics ---------- */
+function summary(sim, n){
+  var r = sim.records.slice(0, n);
+  if(!r.length) return null;
+  var kds = r.map(function(x){ return x.youKD; });
+  var rat = r.map(function(x){ return x.rating; });
+  var lob = r.map(function(x){ return x.lobbyAvg; });
+  var yo = 0, ls = 0;
+  for(var i=1;i<r.length;i++){ yo += Math.abs(rat[i]-rat[i-1]); ls += Math.abs(lob[i]-lob[i-1]); }
+  var bot = [], top = [], botQ = [], ids = new Set(), stayed = 0;
+  r.forEach(function(x){
+    stayed += x.stayedCount;
+    x.lobby.forEach(function(p){
+      if(p.isYou) return; ids.add(p.id);
+      if(p.skill <= POOL.p30){ bot.push(p.kills/MATCH_MINUTES); botQ.push(p.q); }
+      if(p.skill >= POOL.p90) top.push(p.kills/MATCH_MINUTES);
+    });
+  });
   return {
-    n:n, move: d.length ? mean(d.map(Math.abs)) : 0, flips:flips,
-    range: ratings.length ? Math.max.apply(null,ratings) - Math.min.apply(null,ratings) : 0,
-    kdSD: sd(R.map(function(r){ return r.youKD; })), kdMean: mean(R.map(function(r){ return r.youKD; })),
-    lobbySwing: sd(R.map(function(r){ return r.lobbyAvg; })),
-    blow: n ? R.filter(function(r){ return r.blowout; }).length/n : 0,
-    win: n ? R.filter(function(r){ return r.win; }).length/n : 0,
-    ping: mean(R.map(function(r){ return r.avgPing; })),
-    quit: n ? R.reduce(function(s,r){ return s+r.quits; },0)/(n*(LOBBY-1)) : 0,
-    migrations: R.filter(function(r){ return r.migration; }).length,
-    hosted: R.filter(function(r){ return r.youHost; }).length,
-    cheats: R.filter(function(r){ return r.cheater; }).length
+    n:r.length, winRate:avg(r.map(function(x){ return x.win; })), avgKD:avg(kds), kdSD:sd(kds),
+    yoyo: r.length>1 ? yo/(r.length-1) : 0, lobbySwing: r.length>1 ? ls/(r.length-1) : 0,
+    ratingRange: Math.max.apply(null,rat)-Math.min.apply(null,rat),
+    blowout: avg(r.map(function(x){ return x.blowout?1:0; })), avgPing: avg(r.map(function(x){ return x.avgPing; })),
+    quit: avg(r.map(function(x){ return x.quitAvg; })), botQuit: botQ.length ? avg(botQ) : null,
+    kpmBot: bot.length ? avg(bot) : null, kpmTop: top.length ? avg(top) : null,
+    unique: ids.size, persistence: r.length>1 ? stayed/((r.length-1)*11) : 0,
+    fairA: avg(r.map(function(x){ return x.fairActual; })), fairP: avg(r.map(function(x){ return x.fairPerceived; })),
+    expansions: r.filter(function(x){ return x.expansion>0; }).length,
+    lobbySD: avg(r.map(function(x){ return x.lobbySD; }))
   };
 }
 
-/* Population view: lobbies built around random players (used by Mode 3) */
-function popStats(mode){
-  var m = MODES[mode], pool = clonePool(state.basePool), rng = makeRng(state.seed+'|pop');
-  var skills = pool.map(function(p){ return p.trueSkill; }).sort(function(a,b){ return a-b; });
-  var lo = skills[Math.floor(POOL_SIZE*0.3)], hi = skills[Math.floor(POOL_SIZE*0.9)];
-  var bottom=[], top=[], mid=[], blow=0, quits=0, pm=0, N=240;
-  for (var i=0;i<N;i++){
-    var anchor = pool[rng.int(0,POOL_SIZE-1)];
-    var ex = {}; ex[anchor.id]=1;
-    var lobby = [anchor].concat(buildLobby(m, anchor, pool, rng, ex, LOBBY-1));
-    assignTeams(lobby, m, rng, null);
-    var res = simulateMatch(lobby, m, rng, {dc:anchor.region});
-    if (m.usesMMR) updateMMR(res.rows, state.vol);
-    postMatch(res, rng);
-    if (res.blowout) blow++;
-    res.rows.forEach(function(r){
-      var kpm = r.kills/10;
-      if (r.p.trueSkill <= lo) bottom.push(kpm); else if (r.p.trueSkill >= hi) top.push(kpm); else mid.push(r.kd);
-      if (r.quit) quits++; pm++;
-    });
-  }
-  return {bottom:mean(bottom), top:mean(top), midKdSD:sd(mid), blow:blow/N, quit:quits/pm};
-}
-
-/* =========================================================
+/* =====================================================================
    CANVAS CHARTS
-   ========================================================= */
-function setupCanvas(cv){
-  var dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
-  var W = Math.max(1, Math.round(w*dpr)), H = Math.max(1, Math.round(h*dpr));
-  if (cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
-  var ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+   ===================================================================== */
+function prep(canvas){
+  var w = canvas.clientWidth, h = canvas.clientHeight;
+  if(!w || !h) return null;
+  var dpr = window.devicePixelRatio || 1;
+  var W = Math.round(w*dpr), H = Math.round(h*dpr);
+  if(canvas.width !== W || canvas.height !== H){ canvas.width = W; canvas.height = H; }
+  var ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
   return {ctx:ctx, w:w, h:h};
 }
 function niceTicks(min, max, count){
-  var span = max-min; if (span <= 0) return [min];
-  var raw = span/count, mag = Math.pow(10, Math.floor(Math.log10(raw))), norm = raw/mag;
-  var step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag, out = [];
-  for (var v = Math.ceil(min/step)*step; v <= max + 1e-9; v += step) out.push(+v.toFixed(6));
+  var span = max-min; if(span <= 0) return [min];
+  var step0 = span/count, mag = Math.pow(10, Math.floor(Math.log(step0)/Math.LN10)), norm = step0/mag;
+  var step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10)*mag;
+  var out = [];
+  for(var v = Math.ceil(min/step)*step; v <= max+1e-9; v += step) out.push(Math.round(v*1e6)/1e6);
   return out;
 }
-function fmtTick(v){ return Math.abs(v - Math.round(v)) < 1e-6 ? String(Math.round(v)) : v.toFixed(1); }
-function drawLegend(ctx, items, x, y, maxW){
-  if (!items || !items.length) return 0;
-  ctx.font = '600 13px ' + FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+function fmtTick(v){ return Math.abs(v) >= 100 ? v.toFixed(0) : String(Math.round(v*100)/100); }
+function drawLegend(ctx, items, x, y, maxX){
+  ctx.font = '12px '+FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
   var cx = x, cy = y;
   items.forEach(function(it){
-    var tw = ctx.measureText(it.label).width, w = tw + 30;
-    if (cx + w > x + maxW && cx > x){ cx = x; cy += 20; }
+    var tw = ctx.measureText(it.label).width + 28;
+    if(cx + tw > maxX && cx > x){ cx = x; cy += 16; }
     ctx.strokeStyle = it.color; ctx.fillStyle = it.color; ctx.lineWidth = 3;
-    if (it.kind === 'box'){ ctx.fillRect(cx, cy-6, 13, 12); }
-    else if (it.kind === 'dot'){ ctx.beginPath(); ctx.arc(cx+7, cy, 5, 0, Math.PI*2); ctx.fill(); }
-    else if (it.kind === 'ring'){ ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx+7, cy, 6, 0, Math.PI*2); ctx.stroke(); }
-    else { ctx.setLineDash(it.dash || []); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx+20, cy); ctx.stroke(); ctx.setLineDash([]); }
-    ctx.fillStyle = C.text; ctx.fillText(it.label, cx + 25, cy);
-    cx += w + 10;
+    if(it.box){ ctx.fillRect(cx, cy-5, 12, 10); }
+    else { ctx.setLineDash(it.dash || []); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx+16, cy); ctx.stroke(); ctx.setLineDash([]); }
+    ctx.fillStyle = COL.text; ctx.fillText(it.label, cx+20, cy);
+    cx += tw;
   });
-  return cy - y + 20;
+  return cy;
 }
-function drawAxes(ctx, o, L, T, pw, ph, yMin, yMax, h){
-  var Y = function(v){ return T + ph - (v-yMin)/(yMax-yMin)*ph; };
-  ctx.font = '12px ' + FONT; ctx.lineWidth = 1; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+function emptyNote(ctx, w, h, text){
+  ctx.fillStyle = COL.muted; ctx.font = '14px '+FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, w/2, h/2);
+}
+
+/* line chart: X = match number, Y = auto-scaled to the data */
+function drawLine(canvas, cfg){
+  var P = prep(canvas); if(!P) return; var ctx = P.ctx, w = P.w, h = P.h;
+  var legendItems = cfg.series.filter(function(s){ return !s.noLegend; }).map(function(s){ return {label:s.label, color:s.color, dash:s.dash}; });
+  ctx.font = '12px '+FONT;
+  var lw = 0; legendItems.forEach(function(it){ lw += ctx.measureText(it.label).width + 28; });
+  var legendRows = Math.max(1, Math.ceil(lw / Math.max(100, w-70)));
+  var pad = {l:56, r:16, t:14 + legendRows*16, b:44};
+  var pw = w-pad.l-pad.r, ph = h-pad.t-pad.b;
+  var xMax = cfg.xMax || MATCHES;
+  var vals = [];
+  cfg.series.forEach(function(s){ s.data.forEach(function(v){ if(v != null && isFinite(v)) vals.push(v); }); });
+  (cfg.refLines || []).forEach(function(r){ vals.push(r.y); });
+  var yMin = cfg.yMin, yMax = cfg.yMax;
+  if(yMin == null || yMax == null){
+    var lo = vals.length ? Math.min.apply(null, vals) : 0, hi = vals.length ? Math.max.apply(null, vals) : 1;
+    var minSpan = cfg.minSpan || 1;
+    if(hi-lo < minSpan){ var c = (hi+lo)/2; lo = c-minSpan/2; hi = c+minSpan/2; }
+    var pv = (hi-lo)*0.1;
+    if(yMin == null) yMin = lo-pv;
+    if(yMax == null) yMax = hi+pv;
+    if(cfg.floor != null) yMin = Math.max(cfg.floor, yMin);
+  }
+  var X = function(i){ return pad.l + (i/(xMax-1))*pw; };
+  var Y = function(v){ return pad.t + (1-(v-yMin)/(yMax-yMin))*ph; };
+  // grid
+  ctx.lineWidth = 1; ctx.strokeStyle = COL.grid; ctx.fillStyle = COL.muted; ctx.font = '12px '+FONT;
   niceTicks(yMin, yMax, 5).forEach(function(v){
-    ctx.strokeStyle = C.grid; ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(L+pw, Y(v)); ctx.stroke();
-    ctx.fillStyle = C.muted; ctx.fillText(fmtTick(v), L-8, Y(v));
+    var y = Y(v); ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w-pad.r, y); ctx.stroke();
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(fmtTick(v), pad.l-7, y);
   });
-  ctx.strokeStyle = C.axis; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(L, T); ctx.lineTo(L, T+ph); ctx.lineTo(L+pw, T+ph); ctx.stroke();
-  ctx.fillStyle = C.muted; ctx.font = '600 12px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-  if (o.xLabel) ctx.fillText(o.xLabel, L+pw/2, h-4);
-  if (o.yLabel){ ctx.save(); ctx.translate(14, T+ph/2); ctx.rotate(-Math.PI/2); ctx.textBaseline = 'middle'; ctx.fillText(o.yLabel, 0, 0); ctx.restore(); }
-  return Y;
+  [1,5,10,15,20,25,30].forEach(function(n){
+    if(n > xMax) return; var x = X(n-1);
+    ctx.strokeStyle = COL.grid; ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t+ph); ctx.stroke();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = COL.muted; ctx.fillText(n, x, pad.t+ph+6);
+  });
+  ctx.strokeStyle = COL.axis; ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t+ph); ctx.lineTo(w-pad.r, pad.t+ph); ctx.stroke();
+  // axis labels
+  ctx.fillStyle = COL.muted; ctx.font = '12px '+FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillText(cfg.xLabel || 'Match number', pad.l+pw/2, h-4);
+  ctx.save(); ctx.translate(13, pad.t+ph/2); ctx.rotate(-Math.PI/2); ctx.textBaseline = 'middle'; ctx.fillText(cfg.yLabel || '', 0, 0); ctx.restore();
+  // selected match marker
+  if(cfg.selected != null && cfg.selected >= 0){
+    var sx = X(cfg.selected);
+    ctx.fillStyle = 'rgba(68,136,255,0.10)'; ctx.fillRect(sx-pw/(xMax-1)/2, pad.t, pw/(xMax-1), ph);
+  }
+  // reference lines
+  (cfg.refLines || []).forEach(function(rl){
+    var y = Y(rl.y); ctx.strokeStyle = rl.color || '#555566'; ctx.setLineDash([5,5]); ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w-pad.r, y); ctx.stroke(); ctx.setLineDash([]);
+    if(rl.label){ ctx.fillStyle = rl.color || COL.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText(rl.label, w-pad.r-4, y-3); }
+  });
+  // series
+  ctx.save(); ctx.beginPath(); ctx.rect(pad.l, pad.t-6, pw, ph+12); ctx.clip();
+  cfg.series.forEach(function(s){
+    ctx.strokeStyle = s.color; ctx.lineWidth = s.width || 2; ctx.setLineDash(s.dash || []); ctx.lineJoin = 'round';
+    ctx.beginPath(); var started = false;
+    s.data.forEach(function(v,i){ if(v == null || !isFinite(v)){ started = false; return; } var x = X(i), y = Y(v); if(!started){ ctx.moveTo(x,y); started = true; } else ctx.lineTo(x,y); });
+    ctx.stroke(); ctx.setLineDash([]);
+    if(s.points){
+      s.data.forEach(function(v,i){ if(v == null) return; ctx.beginPath(); ctx.arc(X(i), Y(v), s.width ? s.width+1 : 3, 0, Math.PI*2); ctx.fillStyle = s.color; ctx.fill(); ctx.strokeStyle = COL.panel; ctx.lineWidth = 1; ctx.stroke(); });
+    }
+  });
+  ctx.restore();
+  drawLegend(ctx, legendItems, pad.l, 10, w-pad.r);
+  if(cfg.note) emptyNote(ctx, w, h, cfg.note);
 }
-function lineChart(cv, o){
-  var s0 = setupCanvas(cv), ctx = s0.ctx, w = s0.w, h = s0.h; ctx.clearRect(0,0,w,h);
-  var L = 56, Rm = 16, B = 42;
-  var leg = o.series.filter(function(s){ return !s.noLegend; }).map(function(s){ return {label:s.label, color:s.color, dash:s.dash, kind:s.legendKind}; }).concat(o.extraLegend||[]);
-  var T = 12 + drawLegend(ctx, leg, L, 12, w-L-Rm) + 6;
-  var pw = w-L-Rm, ph = h-T-B; if (ph < 40 || pw < 40) return;
-  var X = function(v){ return L + (v-o.xMin)/(o.xMax-o.xMin)*pw; };
-  if (o.selectedX != null){ var bw = pw/(o.xMax-o.xMin); ctx.fillStyle = 'rgba(68,136,255,0.14)'; ctx.fillRect(X(o.selectedX)-bw/2, T, bw, ph); }
-  var Y = drawAxes(ctx, o, L, T, pw, ph, o.yMin, o.yMax, h);
-  ctx.font = '12px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = C.muted;
-  (o.xTicks || niceTicks(o.xMin, o.xMax, 6)).forEach(function(v){ ctx.fillText(String(v), X(v), T+ph+6); });
-  (o.bands||[]).forEach(function(b){ ctx.fillStyle = b.color; ctx.fillRect(L, Y(b.to), pw, Y(b.from)-Y(b.to)); });
-  (o.refLines||[]).forEach(function(r){
-    ctx.strokeStyle = r.color; ctx.setLineDash([5,5]); ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(L, Y(r.y)); ctx.lineTo(L+pw, Y(r.y)); ctx.stroke(); ctx.setLineDash([]);
-    if (r.label){ ctx.fillStyle = r.color; ctx.font = '600 11px ' + FONT; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText(r.label, L+pw-4, Y(r.y)-3); }
+
+/* bar chart: grouped or stacked */
+function drawBars(canvas, cfg){
+  var P = prep(canvas); if(!P) return; var ctx = P.ctx, w = P.w, h = P.h;
+  var showLegend = cfg.legend !== false && cfg.series.length > 0;
+  var pad = {l:50, r:12, t:showLegend ? 32 : 16, b:cfg.rotate ? 70 : 44};
+  var pw = w-pad.l-pad.r, ph = h-pad.t-pad.b;
+  var G = cfg.groups.length, S = cfg.series.length, maxV = 0, g, s;
+  for(g=0; g<G; g++){
+    if(cfg.stacked){ var tot = 0; cfg.series.forEach(function(se){ tot += se.values[g] || 0; }); maxV = Math.max(maxV, tot); }
+    else cfg.series.forEach(function(se){ maxV = Math.max(maxV, se.values[g] || 0); });
+  }
+  var yMax = cfg.yMax != null ? Math.max(cfg.yMax, maxV*1.12) : (maxV > 0 ? maxV*1.18 : 1);
+  var Y = function(v){ return pad.t + ph - (v/yMax)*ph; };
+  ctx.font = '12px '+FONT; ctx.lineWidth = 1;
+  niceTicks(0, yMax, 4).forEach(function(v){
+    var y = Y(v); ctx.strokeStyle = COL.grid; ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w-pad.r, y); ctx.stroke();
+    ctx.fillStyle = COL.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText((cfg.yFmt || fmtTick)(v), pad.l-7, y);
   });
-  (o.markers||[]).forEach(function(mk){
-    ctx.strokeStyle = mk.color; ctx.setLineDash([3,3]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(X(mk.x), T); ctx.lineTo(X(mk.x), T+ph); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = mk.color; ctx.font = 'bold 11px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(mk.label, X(mk.x), T+2);
-  });
-  ctx.save(); ctx.beginPath(); ctx.rect(L-8, T-8, pw+16, ph+16); ctx.clip();
-  o.series.forEach(function(s){
-    if (!s.data || !s.data.length) return;
-    var yy = function(v){ return Y(clamp(v, o.yMin, o.yMax)); };
-    ctx.strokeStyle = s.color; ctx.lineWidth = s.width || 2.5; ctx.setLineDash(s.dash || []); ctx.lineJoin = 'round'; ctx.globalAlpha = s.alpha || 1;
-    ctx.beginPath();
-    s.data.forEach(function(pt, i){
-      var x = X(pt[0]), y = yy(pt[1]);
-      if (i === 0) ctx.moveTo(x, y);
-      else if (s.step){ ctx.lineTo(x, yy(s.data[i-1][1])); ctx.lineTo(x, y); }
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
-    if (s.points){
-      s.data.forEach(function(pt, i){
-        var pc = s.pointColors ? s.pointColors[i] : s.color; if (!pc) return;
-        var x = X(pt[0]), y = yy(pt[1]);
-        ctx.fillStyle = pc; ctx.beginPath(); ctx.arc(x, y, s.pointR || 4, 0, Math.PI*2); ctx.fill();
-        if (s.rings && s.rings[i]){ ctx.strokeStyle = s.rings[i]; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x, y, 8.5, 0, Math.PI*2); ctx.stroke(); }
-        if (pt[1] > o.yMax){ ctx.fillStyle = pc; ctx.font = 'bold 10px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(fmt(pt[1],1), x, y+7); }
+  ctx.strokeStyle = COL.axis; ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t+ph); ctx.lineTo(w-pad.r, pad.t+ph); ctx.stroke();
+  var gw = pw/G;
+  if(cfg.highlight != null && cfg.highlight >= 0){
+    var hx = pad.l + cfg.highlight*gw;
+    ctx.fillStyle = 'rgba(0,255,136,0.08)'; ctx.fillRect(hx+1, pad.t, gw-2, ph);
+    ctx.strokeStyle = COL.green; ctx.setLineDash([4,3]); ctx.strokeRect(hx+1.5, pad.t+0.5, gw-3, ph-1); ctx.setLineDash([]);
+    ctx.fillStyle = COL.green; ctx.font = 'bold 12px '+FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(cfg.highlightLabel || 'YOU', hx+gw/2, pad.t+4);
+  }
+  for(g=0; g<G; g++){
+    if(cfg.stacked){
+      var base = 0, bw = Math.min(gw*0.7, 60), x0 = pad.l + g*gw + (gw-bw)/2;
+      cfg.series.forEach(function(se){
+        var v = se.values[g] || 0; if(v <= 0) return;
+        ctx.fillStyle = (se.colors && se.colors[g]) || se.color;
+        ctx.fillRect(x0, Y(base+v), bw, Y(base)-Y(base+v)-1);
+        base += v;
       });
+      if(cfg.outline === g){ ctx.strokeStyle = COL.green; ctx.lineWidth = 2.5; ctx.strokeRect(x0-2, Y(base)-2, bw+4, Y(0)-Y(base)+2); ctx.lineWidth = 1; }
+    } else {
+      var bw2 = Math.min(gw*0.8/S, 70), off = (gw - bw2*S)/2;
+      for(s=0; s<S; s++){
+        var se = cfg.series[s], v2 = se.values[g], x = pad.l + g*gw + off + s*bw2;
+        if(v2 == null){ ctx.fillStyle = COL.muted; ctx.font = '11px '+FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText('n/a', x+bw2/2, Y(0)-3); continue; }
+        ctx.fillStyle = (se.colors && se.colors[g]) || se.color;
+        ctx.fillRect(x+1, Y(v2), bw2-2, Y(0)-Y(v2));
+        if(cfg.outline === g){ ctx.strokeStyle = COL.green; ctx.lineWidth = 2.5; ctx.strokeRect(x, Y(v2)-1, bw2, Y(0)-Y(v2)+1); ctx.lineWidth = 1; }
+        if(cfg.valueLabels){ ctx.fillStyle = COL.text; ctx.font = 'bold 12px '+FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(cfg.valueLabels(v2), x+bw2/2, Y(v2)-3); }
+      }
     }
-  });
-  ctx.restore();
-  if (o.empty){ ctx.fillStyle = C.muted; ctx.font = '15px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(o.empty, L+pw/2, T+ph/2); }
-}
-function barChart(cv, o){
-  var s0 = setupCanvas(cv), ctx = s0.ctx, w = s0.w, h = s0.h; ctx.clearRect(0,0,w,h);
-  var L = 52, Rm = 12, B = o.rotate ? 82 : (o.twoLine ? 56 : 42);
-  var T = 12 + drawLegend(ctx, o.legend, L, 12, w-L-Rm) + (o.legend ? 22 : 18);
-  var pw = w-L-Rm, ph = h-T-B; if (ph < 30 || pw < 40) return;
-  var Y = drawAxes(ctx, o, L, T, pw, ph, o.yMin||0, o.yMax, h);
-  (o.refLines||[]).forEach(function(r){
-    ctx.strokeStyle = r.color; ctx.setLineDash([5,5]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(L, Y(r.y)); ctx.lineTo(L+pw, Y(r.y)); ctx.stroke(); ctx.setLineDash([]);
-    if (r.label){ ctx.fillStyle = r.color; ctx.font = '600 11px ' + FONT; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText(r.label, L+pw-4, Y(r.y)-3); }
-  });
-  var n = o.bars.length;
-  if (!n){ ctx.fillStyle = C.muted; ctx.font = '15px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(o.empty || 'No data yet', L+pw/2, T+ph/2); return; }
-  var slot = pw/n, bw = Math.min(slot*0.7, o.maxBar || 64);
-  o.bars.forEach(function(b, i){
-    var x = L + slot*i + (slot-bw)/2, v = clamp(b.value, o.yMin||0, o.yMax), y = Y(v), base = T+ph;
-    ctx.fillStyle = b.color; ctx.beginPath();
-    var r = Math.min(4, bw/2, (base-y)/2);
-    ctx.moveTo(x, base); ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y); ctx.lineTo(x+bw-r, y); ctx.quadraticCurveTo(x+bw, y, x+bw, y+r); ctx.lineTo(x+bw, base); ctx.closePath(); ctx.fill();
-    if (b.outline){ ctx.strokeStyle = b.outline; ctx.lineWidth = 3; ctx.strokeRect(x-2, y-2, bw+4, base-y+2); }
-    ctx.fillStyle = C.text; ctx.font = '600 12px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText(b.valueText != null ? b.valueText : fmtTick(b.value), x+bw/2, y-4);
-    if (b.tag){ ctx.fillStyle = b.tagColor || C.pink; ctx.font = 'bold 10px ' + FONT; ctx.fillText(b.tag, x+bw/2, y-19); }
-    ctx.fillStyle = b.labelColor || C.muted; ctx.font = (b.labelBold ? 'bold ' : '') + '12px ' + FONT;
-    if (o.rotate){ ctx.save(); ctx.translate(x+bw/2+4, base+8); ctx.rotate(-Math.PI/4); ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(b.label, 0, 0); ctx.restore(); }
-    else { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; String(b.label).split('\n').forEach(function(line, li){ ctx.fillText(line, x+bw/2, base+6+li*15); }); }
-  });
-}
-
-/* =========================================================
-   NETWORK TOPOLOGY DRAWING
-   ========================================================= */
-function personIcon(ctx, x, y, r, stroke, fill){
-  ctx.save();
-  ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
-  ctx.clip();
-  ctx.fillStyle = stroke;
-  ctx.beginPath(); ctx.arc(x, y - r*0.25, r*0.3, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(x, y + r*0.75, r*0.55, Math.PI, 0); ctx.fill();
-  ctx.restore();
-  ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.stroke();
-}
-function rackIcon(ctx, x, y, time){
-  var W = 66, H = 82;
-  ctx.fillStyle = '#161b2e'; ctx.strokeStyle = C.blue; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(x-W/2+6, y-H/2); ctx.lineTo(x+W/2-6, y-H/2); ctx.quadraticCurveTo(x+W/2, y-H/2, x+W/2, y-H/2+6);
-  ctx.lineTo(x+W/2, y+H/2-6); ctx.quadraticCurveTo(x+W/2, y+H/2, x+W/2-6, y+H/2); ctx.lineTo(x-W/2+6, y+H/2); ctx.quadraticCurveTo(x-W/2, y+H/2, x-W/2, y+H/2-6);
-  ctx.lineTo(x-W/2, y-H/2+6); ctx.quadraticCurveTo(x-W/2, y-H/2, x-W/2+6, y-H/2); ctx.closePath(); ctx.fill(); ctx.stroke();
-  for (var i=0;i<4;i++){
-    var sy = y - H/2 + 9 + i*18;
-    ctx.fillStyle = '#0b0e1a'; ctx.fillRect(x-W/2+7, sy, W-14, 13);
-    ctx.fillStyle = '#2b3554'; ctx.fillRect(x-W/2+11, sy+5, 20, 3);
-    for (var j=0;j<3;j++){
-      var on = Math.sin(time*(5+j) + i*2.1 + j*1.7) > -0.2;
-      ctx.fillStyle = on ? (j===2 ? C.amber : C.green) : '#22304a';
-      ctx.beginPath(); ctx.arc(x+W/2-13-j*8, sy+6.5, 2.4, 0, Math.PI*2); ctx.fill();
-    }
+    // x labels
+    var lx = pad.l + g*gw + gw/2;
+    ctx.fillStyle = (cfg.outline === g || cfg.highlight === g) ? COL.green : COL.muted;
+    ctx.font = (cfg.outline === g ? 'bold ' : '') + (cfg.rotate ? '11px ' : '12px ') + FONT;
+    if(cfg.rotate){ ctx.save(); ctx.translate(lx+3, pad.t+ph+6); ctx.rotate(-0.75); ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(cfg.groups[g], 0, 0); ctx.restore(); }
+    else { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(cfg.groups[g], lx, pad.t+ph+6); }
   }
-}
-function labelBox(ctx, text, x, y, color){
-  ctx.font = 'bold 12px ' + FONT; var tw = ctx.measureText(text).width;
-  ctx.fillStyle = 'rgba(10,10,15,0.9)'; ctx.fillRect(x - tw/2 - 5, y - 9, tw + 10, 18);
-  ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.strokeRect(x - tw/2 - 5, y - 9, tw + 10, 18);
-  ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 0.5);
-}
-function drawTopology(cv, d, time){
-  var s0 = setupCanvas(cv), ctx = s0.ctx, w = s0.w, h = s0.h;
-  ctx.clearRect(0,0,w,h);
-  ctx.fillStyle = '#0d0d15'; ctx.fillRect(0,0,w,h);
-  if (!d || !d.nodes || !d.nodes.length){
-    ctx.fillStyle = C.muted; ctx.font = '15px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('Run a match to see this lobby\'s connections', w/2, h/2); return;
+  ctx.fillStyle = COL.muted; ctx.font = '12px '+FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  if(cfg.xLabel) ctx.fillText(cfg.xLabel, pad.l+pw/2, h-3);
+  ctx.save(); ctx.translate(13, pad.t+ph/2); ctx.rotate(-Math.PI/2); ctx.textBaseline = 'middle'; ctx.fillText(cfg.yLabel || '', 0, 0); ctx.restore();
+  if(showLegend){
+    var items = cfg.legendItems || cfg.series.map(function(se){ return {label:se.label, color:se.color, box:true}; });
+    drawLegend(ctx, items, pad.l, 12, w-pad.r);
   }
-  var p2p = d.type === 'p2p';
-  var host = p2p ? d.nodes.filter(function(n){ return n.isHost; })[0] : null;
-  var ring = p2p ? d.nodes.filter(function(n){ return !n.isHost; }) : d.nodes;
-  var cx = w/2, cy = h/2 + 6;
-  var ry = Math.min(h*0.37, w*0.36), rx = Math.min(w*0.40, ry*1.55);
-  var mig = d.migrating;
-  var pos = ring.map(function(n, i){ var a = -Math.PI/2 + (i+0.5)/ring.length*Math.PI*2; return {n:n, x:cx + Math.cos(a)*rx, y:cy + Math.sin(a)*ry}; });
+  if(cfg.note) emptyNote(ctx, w, h, cfg.note);
+}
 
-  // centre halo
-  var pulse = 0.5 + 0.5*Math.sin(time*3);
-  ctx.strokeStyle = p2p ? 'rgba(0,255,136,' + (0.15+0.25*pulse) + ')' : 'rgba(68,136,255,' + (0.15+0.25*pulse) + ')';
-  ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, 48 + pulse*8, 0, Math.PI*2); ctx.stroke();
-
-  // links
-  pos.forEach(function(o){
-    var col = mig ? '#555566' : pingColor(o.n.ping);
-    ctx.strokeStyle = col; ctx.globalAlpha = mig ? 0.6 : 0.75; ctx.lineWidth = 2.5; ctx.setLineDash(mig ? [6,6] : []);
-    ctx.beginPath(); ctx.moveTo(o.x, o.y); ctx.lineTo(cx, cy); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
-  });
-  // packets
-  if (!mig){
-    pos.forEach(function(o, i){
-      var col = pingColor(o.n.ping), dur = 0.45 + o.n.ping/45;
-      var ph = ((time + i*0.37) / dur) % 1, ph2 = (ph + 0.5) % 1;
-      ctx.shadowColor = col; ctx.shadowBlur = 10; ctx.fillStyle = col;
-      var r = 3.5 + 1.2*Math.sin(time*8 + i);
-      ctx.beginPath(); ctx.arc(o.x + (cx-o.x)*ph, o.y + (cy-o.y)*ph, r, 0, Math.PI*2); ctx.fill();
-      ctx.globalAlpha = 0.6; ctx.beginPath(); ctx.arc(cx + (o.x-cx)*ph2, cy + (o.y-cy)*ph2, r*0.8, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
-      ctx.shadowBlur = 0;
+/* lobby skill spread: bracket histogram of the 12 players */
+function drawSkillSpread(canvas, rec){
+  var a = [0,0,0,0,0,0,0,0,0,0], b = a.slice(), hl = -1;
+  if(rec) rec.lobby.forEach(function(p){ (p.team===0 ? a : b)[p.bracket-1]++; if(p.isYou) hl = p.bracket-1; });
+  drawBars(canvas, {groups:['1','2','3','4','5','6','7','8','9','10'], stacked:true, highlight:hl, yMax:6,
+    series:[{label:'Your team',color:COL.blue,values:a},{label:'Enemy team',color:COL.red,values:b}],
+    yLabel:'Players', xLabel:'Skill bracket (1 = lowest, 10 = highest)', note: rec ? null : 'No match played yet'});
+}
+/* lobby ping bars */
+function drawPingBars(canvas, rec){
+  if(!rec){ drawBars(canvas, {groups:[''], series:[], yMax:120, legend:false, yLabel:'Ping (ms)', note:'No match played yet'}); return; }
+  var L = rec.lobby.slice().sort(function(x,y){ return x.team-y.team; });
+  var you = -1;
+  L.forEach(function(p,i){ if(p.isYou) you = i; });
+  drawBars(canvas, {groups:L.map(function(p){ return p.isYou ? 'YOU' : p.name.slice(0,9); }), rotate:true, outline:you, yMax:120,
+    series:[{label:'Ping', color:COL.blue, values:L.map(function(p){ return p.ping; }), colors:L.map(function(p){ return pingColour(p.ping); })}],
+    legendItems:[{label:'<30ms',color:COL.green,box:true},{label:'30-60',color:'#ffee44',box:true},{label:'60-90',color:'#ff8c1a',box:true},{label:'>90',color:COL.red,box:true}],
+    yLabel:'Ping (ms)'});
+}
+/* Mode 4: lobby persistence grid */
+function drawPersistence(canvas, recs){
+  var P = prep(canvas); if(!P) return; var ctx = P.ctx, w = P.w, h = P.h;
+  var pad = {l:56, r:12, t:30, b:40}, pw = w-pad.l-pad.r, ph = h-pad.t-pad.b;
+  var cw = pw/MATCHES, rh = ph/11;
+  ctx.fillStyle = COL.muted; ctx.font = '12px '+FONT;
+  ctx.save(); ctx.translate(13, pad.t+ph/2); ctx.rotate(-Math.PI/2); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('Other 11 players', 0, 0); ctx.restore();
+  for(var j=0;j<MATCHES;j++){
+    var rec = recs[j];
+    if(!rec){ ctx.fillStyle = '#181824'; for(var k=0;k<11;k++) ctx.fillRect(pad.l+j*cw+1, pad.t+k*rh+1, cw-2, rh-2); continue; }
+    var others = rec.lobby.filter(function(p){ return !p.isYou; }).sort(function(x,y){ return (y.party-x.party) || (y.stayed-x.stayed); });
+    others.forEach(function(p,k){
+      ctx.fillStyle = p.party ? COL.pink : j === 0 ? '#55556a' : p.stayed ? 'rgba(0,255,136,0.75)' : COL.blue;
+      ctx.fillRect(pad.l+j*cw+1, pad.t+k*rh+1, cw-2, rh-2);
     });
   }
-  // ping labels
-  pos.forEach(function(o){
-    var lx = cx + (o.x-cx)*0.56, ly = cy + (o.y-cy)*0.56;
-    labelBox(ctx, (mig ? '--' : o.n.ping) + 'ms', lx, ly, mig ? '#777788' : pingColor(o.n.ping));
-  });
-  // ring nodes
-  pos.forEach(function(o){
-    var n = o.n, stroke = n.isYou ? C.green : n.cheater ? C.red : '#9a9ab0';
-    personIcon(ctx, o.x, o.y, n.isYou ? 18 : 15, stroke, n.isYou ? '#0d2a1d' : '#1b1b2a');
-    ctx.font = (n.isYou ? 'bold 13px ' : '12px ') + FONT; ctx.fillStyle = n.isYou ? C.green : n.cheater ? C.red : C.text;
-    ctx.textAlign = 'center'; ctx.textBaseline = o.y < cy ? 'bottom' : 'top';
-    var ty = o.y < cy ? o.y - 21 : o.y + 21;
-    ctx.fillText(n.name + (n.cheater ? ' (cheat)' : ''), o.x, ty);
-  });
-  // centre
-  if (p2p && host){
-    var hs = mig ? '#777788' : C.green;
-    personIcon(ctx, cx, cy, 28, hs, mig ? '#1b1b2a' : '#0d2a1d');
-    ctx.textAlign = 'center';
-    ctx.font = 'bold 14px ' + FONT; ctx.fillStyle = hs; ctx.textBaseline = 'bottom';
-    ctx.fillText(mig ? 'HOST LEFT' : 'HOST (0ms)', cx, cy - 34);
-    ctx.font = (host.isYou ? 'bold ' : '') + '13px ' + FONT; ctx.fillStyle = host.isYou ? C.green : C.text; ctx.textBaseline = 'top';
-    ctx.fillText(host.isYou ? 'YOU' : host.name, cx, cy + 33);
-  } else if (!p2p){
-    rackIcon(ctx, cx, cy, time);
-    ctx.textAlign = 'center'; ctx.font = 'bold 14px ' + FONT; ctx.fillStyle = C.blue; ctx.textBaseline = 'top';
-    ctx.fillText('DATA CENTRE', cx, cy + 46);
-    if (d.dc){ ctx.font = '12px ' + FONT; ctx.fillStyle = C.muted; ctx.fillText(d.dc, cx, cy + 64); }
-  }
-  if (mig){
-    var left = Math.max(0, Math.ceil(mig.left));
-    ctx.fillStyle = 'rgba(10,10,15,0.55)'; ctx.fillRect(0, 0, w, 44);
-    ctx.fillStyle = C.pink; ctx.font = 'bold 20px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('HOST MIGRATION IN PROGRESS... ' + left + 's', w/2, 22);
-  }
+  ctx.fillStyle = COL.muted; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  [1,5,10,15,20,25,30].forEach(function(n){ ctx.fillText(n, pad.l+(n-0.5)*cw, pad.t+ph+6); });
+  ctx.textBaseline = 'bottom'; ctx.fillText('Match number', pad.l+pw/2, h-3);
+  drawLegend(ctx, [{label:'Stayed from last match',color:'rgba(0,255,136,0.75)',box:true},{label:'New arrival (MMR-sorted)',color:COL.blue,box:true},{label:'Party member',color:COL.pink,box:true},{label:'First lobby',color:'#55556a',box:true}], pad.l, 12, w-pad.r);
 }
 
-/* =========================================================
-   UI BUILDING
-   ========================================================= */
-function paramsHTML(id){
-  var h = '';
-  if (MODES[id].usesMMR){
-    h += '<label class="ctl">MMR Aggressiveness <input type="range" class="volSlider" min="0.05" max="0.40" step="0.01" value="' + state.vol + '"><span class="val volVal">' + state.vol.toFixed(2) + '</span></label>';
-    h += '<label class="ctl"><input type="checkbox" class="brToggle"' + (state.showBracket ? ' checked' : '') + '> Show SBMM bracket overlay</label>';
+/* network topology diagram */
+function drawNetwork(canvas, rec, t, title){
+  var P = prep(canvas); if(!P) return; var ctx = P.ctx, w = P.w, h = P.h;
+  var cx = w/2, cy = h/2 + 8, R = Math.min(w*0.34, h*0.34);
+  // faint grid
+  ctx.strokeStyle = 'rgba(68,136,255,0.05)'; ctx.lineWidth = 1;
+  for(var gx=0; gx<w; gx+=28){ ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,h); ctx.stroke(); }
+  for(var gy=0; gy<h; gy+=28){ ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(w,gy); ctx.stroke(); }
+  if(!rec){ emptyNote(ctx, w, h, 'No lobby yet'); return; }
+  var L = rec.lobby.slice().sort(function(a,b){ return a.team-b.team; });
+  var skills = L.map(function(p){ return p.skill; });
+  var lo = Math.min.apply(null, skills), hi = Math.max.apply(null, skills), spread = hi-lo;
+  // header
+  ctx.font = 'bold 13px '+FONT; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillStyle = spread > 40 ? COL.red : spread > 22 ? COL.amber : COL.green;
+  ctx.fillText('Lobby skill range: '+lo.toFixed(0)+' to '+hi.toFixed(0)+'  (spread '+spread.toFixed(0)+')', 10, 8);
+  ctx.fillStyle = COL.muted; ctx.font = '12px '+FONT; ctx.fillText(title || '', 10, 26);
+  var pos = L.map(function(p,i){ var ang = -Math.PI/2 + (i+0.5)*(Math.PI*2/L.length); return {x:cx+Math.cos(ang)*R, y:cy+Math.sin(ang)*R, ang:ang}; });
+  // links and packets
+  L.forEach(function(p,i){
+    var q = pos[i], col = pingColour(p.ping);
+    ctx.strokeStyle = col; ctx.globalAlpha = 0.55; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(cx, cy); ctx.stroke(); ctx.globalAlpha = 1;
+    var period = 600 + p.ping*22;
+    for(var k=0;k<3;k++){
+      var ph = ((t/period) + k/3 + i*0.137) % 1;
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(q.x+(cx-q.x)*ph, q.y+(cy-q.y)*ph, 3, 0, Math.PI*2); ctx.fill();
+      var ph2 = (ph + 0.5) % 1;
+      ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.7;
+      ctx.beginPath(); ctx.arc(cx+(q.x-cx)*ph2, cy+(q.y-cy)*ph2, 2, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
+    }
+    var mx = q.x+(cx-q.x)*0.45, my = q.y+(cy-q.y)*0.45;
+    ctx.font = 'bold 11px '+FONT; var tw = ctx.measureText(p.ping+'ms').width + 8;
+    ctx.fillStyle = 'rgba(10,10,15,0.85)'; ctx.fillRect(mx-tw/2, my-8, tw, 16);
+    ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.ping+'ms', mx, my);
+  });
+  // server rack
+  var rw = 78, rhh = 96;
+  ctx.fillStyle = '#1b1b2a'; ctx.strokeStyle = '#4a4a66'; ctx.lineWidth = 2;
+  ctx.fillRect(cx-rw/2, cy-rhh/2, rw, rhh); ctx.strokeRect(cx-rw/2, cy-rhh/2, rw, rhh);
+  for(var u=0; u<5; u++){
+    var uy = cy-rhh/2+8+u*17;
+    ctx.fillStyle = '#26263a'; ctx.fillRect(cx-rw/2+7, uy, rw-14, 12);
+    var on = Math.sin(t/180 + u*1.7) > -0.2;
+    ctx.fillStyle = on ? COL.green : '#0d3322'; ctx.beginPath(); ctx.arc(cx+rw/2-14, uy+6, 2.6, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = Math.sin(t/90 + u) > 0.4 ? COL.blue : '#14264a'; ctx.beginPath(); ctx.arc(cx+rw/2-22, uy+6, 2.6, 0, Math.PI*2); ctx.fill();
   }
-  if (id === 4) h += '<label class="ctl"><input type="checkbox" id="partyToggle"> Enemy 6-stack party in lobby</label>';
-  if (id === 5) h += '<label class="ctl"><input type="checkbox" id="cheatToggle" checked> Cheaters can appear (no server-side validation)</label>';
-  if (id === 1) h += '<span class="muted">No MMR in this mode. Brackets are only reviewed every 20 matches.</span>';
-  return h ? '<div class="params">' + h + '</div>' : '';
+  ctx.fillStyle = COL.text; ctx.font = 'bold 12px '+FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillText('DATA CENTRE', cx, cy+rhh/2+6);
+  // players
+  L.forEach(function(p,i){
+    var q = pos[i], col = p.team === 0 ? COL.blue : COL.red;
+    if(p.isYou){ ctx.strokeStyle = COL.green; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(q.x, q.y, 22 + Math.sin(t/250)*1.5, 0, Math.PI*2); ctx.stroke(); }
+    ctx.fillStyle = '#10101a'; ctx.beginPath(); ctx.arc(q.x, q.y, 18, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = p.isYou ? COL.green : col;
+    ctx.beginPath(); ctx.arc(q.x, q.y-5, 5.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(q.x, q.y+11, 9, Math.PI, 0); ctx.fill();
+    var ox = Math.cos(q.ang), oy = Math.sin(q.ang);
+    var tx = q.x + ox*30, ty = q.y + oy*30;
+    ctx.textAlign = Math.abs(ox) < 0.3 ? 'center' : ox > 0 ? 'left' : 'right';
+    ctx.textBaseline = Math.abs(oy) < 0.5 ? 'middle' : oy > 0 ? 'top' : 'bottom';
+    var lines = [p.isYou ? 'YOU' : p.name, 'Skill '+p.skill.toFixed(0)+(p.cheat?'  CHEAT':'')];
+    var dy = ctx.textBaseline === 'bottom' ? -14 : ctx.textBaseline === 'middle' ? -7 : 0;
+    ctx.font = 'bold 12px '+FONT; ctx.fillStyle = p.isYou ? COL.green : COL.text; ctx.fillText(lines[0], tx, ty+dy);
+    var dev = Math.abs(p.skill - rec.lobby[0].skill);
+    ctx.font = '12px '+FONT; ctx.fillStyle = dev > 25 ? COL.red : dev > 12 ? COL.amber : COL.muted;
+    ctx.fillText(lines[1], tx, ty+dy+14);
+  });
+  drawLegend(ctx, [{label:'<30ms',color:COL.green,box:true},{label:'30-60',color:'#ffee44',box:true},{label:'60-90',color:'#ff8c1a',box:true},{label:'>90ms',color:COL.red,box:true},{label:'Your team',color:COL.blue,box:true},{label:'Enemy',color:COL.red,box:true}], 10, h-14, w-10);
 }
-function extrasHTML(id){
-  if (id === 3) return '<div class="panel chart span2"><h3>Population view: 240 lobbies built around random players, Standard (Mode 2) vs Open (Mode 3)</h3>' +
-    '<div class="pop-grid"><canvas id="m3-kpm" style="height:300px"></canvas><div id="m3-popstats" class="popstats"></div></div></div>';
-  if (id === 4) return '<div class="panel span2"><h3>Lobby persistence (selected match)</h3><div class="persist" id="m4-persist"></div>' +
-    '<div class="legend-row"><span><i style="background:#00ff88"></i>Stayed from last match</span><span><i style="background:#4488ff"></i>New replacement (still MMR-sorted)</span><span><i style="background:#ffaa00"></i>Party stack member</span></div>' +
-    '<div class="left-list" id="m4-left"></div></div>' +
-    '<div class="panel chart"><h3>The placebo: how fair it feels vs how fair it is</h3><canvas id="m4-fair"></canvas></div>' +
-    '<div class="panel chart topo"><h3>Network: dedicated server</h3><canvas id="m4-topo"></canvas><p class="cap">Packets route through a data centre, not to another player. Persistent lobbies do not change this.</p></div>';
-  if (id === 5) return '<div class="panel chart topo span2"><h3>Network: every player connects to the host (selected match)</h3><canvas id="m5-topo"></canvas>' +
-    '<p class="cap" style="color:#ffaa00">All traffic routes through one player. Host has zero latency. No server-side cheat detection.</p></div>';
+
+/* =====================================================================
+   APP STATE AND UI
+   ===================================================================== */
+var S = {revealed:0, timer:null, running:false, tab:'m1', sims:{}, tiers:null, sel:{1:null,2:null,3:null,4:null,5:null}, cmpA:1, cmpB:2};
+
+function readSettings(){
+  var skill = +el('youSkill').value;
+  if(el('kdAuto').checked) el('youKD').value = (skill/50).toFixed(2);
+  return {
+    Y:{skill:skill, kd:clamp(+el('youKD').value || skill/50, 0.1, 4), region:el('youRegion').value, input:el('youInput').value, ping:+el('youPing').value},
+    opt:{vol:+el('vol').value, protect:el('protect').checked, party:el('party').checked, cheaters:el('cheaters').checked, overlay:el('overlay').checked}
+  };
+}
+function recompute(){
+  var st = readSettings();
+  for(var m=1;m<=5;m++) S.sims[m] = simulate(m, st.Y, st.opt);
+  var tm = +el('tierMode').value;
+  S.tiers = [33,66,100].map(function(s){ var y = {}; for(var k in st.Y) y[k] = st.Y[k]; y.skill = s; y.kd = s/50; return simulate(tm, y, st.opt); });
+  S.opt = st.opt; S.Y = st.Y;
+  updatePoolInfo();
+  render();
+}
+function updatePoolInfo(){
+  var ids = new Set(), n = Math.max(1, S.revealed);
+  for(var m=1;m<=5;m++) S.sims[m].records.slice(0,n).forEach(function(r){ r.lobby.forEach(function(p){ if(!p.isYou) ids.add(p.id); }); });
+  el('poolInst').textContent = ids.size.toLocaleString('en-GB') + ' full profiles built so far (only players in your lobbies)';
+  var bc = POOL.bracketCounts.map(function(c){ return (c/POOL_SIZE*100).toFixed(1)+'%'; });
+  el('poolDetail').innerHTML = 'Seed '+SEED+'. Generated in '+POOL.ms.toFixed(0)+' ms.<br>Bracket share 1 to 10: '+bc.join(', ');
+}
+
+/* ---------- mode panel templates ---------- */
+function buildModePanels(){
+  var html = '';
+  for(var m=1;m<=5;m++){
+    var C = MODE_CFG[m];
+    var ratingTitle = m===1 ? 'Skill Bracket Over Time' : m===5 ? 'Rating Over Time (no rating system exists)' : 'MMR Over Time vs SBMM Bracket';
+    html += '<section class="tabpanel'+(m===1?' active':'')+'" id="tab-m'+m+'">'+
+      '<div class="mode-head"><div><h2>Mode '+m+': '+C.title+'</h2><span class="era">'+C.era+'</span></div><div class="tagline">'+C.tagline+'</div></div>'+
+      '<details class="info"><summary>How This Works</summary><p>'+esc(INFO[m])+'</p></details>'+
+      '<div class="stats" id="stats-'+m+'"></div>'+
+      '<div class="grid">'+
+        '<div class="card wide"><h3>'+ratingTitle+'</h3><p class="cap">'+LOOK_FOR[m]+'</p><canvas id="c'+m+'-rating" class="h340"></canvas></div>'+
+        '<div class="card wide"><h3>K/D Per Match</h3><p class="cap">Your kill/death ratio each match. 1.0 is an even match.</p><canvas id="c'+m+'-kd" class="h260"></canvas></div>'+
+        '<div class="card"><h3>Lobby Skill Spread</h3><p class="cap">Which skill brackets the 12 players came from in the selected match.</p><canvas id="c'+m+'-skill" class="h260"></canvas></div>'+
+        '<div class="card"><h3>Lobby Ping</h3><p class="cap">Connection to the data centre for each player in the selected match.</p><canvas id="c'+m+'-ping" class="h260"></canvas></div>'+
+        extrasHTML(m)+
+      '</div>'+
+      '<div class="card lobbycard"><div class="lobby-head"><h3 style="margin:0">Lobby Viewer</h3>'+
+        '<div class="slider"><span class="muted">Match</span><input type="range" min="1" max="30" value="1" id="sel-'+m+'" data-mode="'+m+'" disabled><span id="selv-'+m+'" style="min-width:58px;font-weight:700">-</span></div>'+
+        '<div id="res-'+m+'"></div></div><div id="lobby-'+m+'"></div></div>'+
+    '</section>';
+  }
+  el('modePanels').innerHTML = html;
+}
+function extrasHTML(m){
+  if(m===3) return '<div class="card"><h3>Kills Per Minute: Bottom 30% vs Top 10%</h3><p class="cap">How the weakest and strongest players in your lobbies did, compared with Mode 2.</p><canvas id="c3-kpm" class="h260"></canvas></div>'+
+                   '<div class="card"><h3>Quit Rate Indicator</h3><p class="cap">Simulated chance a player backs out after each match.</p><canvas id="c3-quit" class="h260"></canvas></div>';
+  if(m===4) return '<div class="card wide"><h3>Lobby Persistence</h3><p class="cap">Each column is a match, each square a player. Green stayed from the last match. Blue arrived as a replacement, picked by MMR.</p><canvas id="c4-persist" class="h240"></canvas></div>'+
+                   '<div class="card"><h3>Perceived vs Actual Fairness</h3><p class="cap">Familiar faces make lobbies feel fairer. The actual skill gap says otherwise.</p><canvas id="c4-fair" class="h300"></canvas></div>'+
+                   '<div class="card"><h3>Dedicated Server Routing</h3><p class="cap">Packets go through a data centre, not straight to another player.</p><canvas id="c4-net" class="h300"></canvas></div>';
+  if(m===5) return '<div class="card"><h3>Kills Per Minute: Bottom 30% vs Top 10%</h3><p class="cap">With no matchmaking, compared with basic brackets (Mode 1).</p><canvas id="c5-kpm" class="h260"></canvas></div>'+
+                   '<div class="card"><h3>Who You Face: Population vs Your Lobbies</h3><p class="cap">Share of the 200,000 pool in each bracket, and share of the players in your lobbies.</p><canvas id="c5-pop" class="h260"></canvas></div>';
   return '';
 }
-function modeViewHTML(id){
-  var m = MODES[id], P = 'm' + id + '-';
-  var ratingTitle = m.usesMMR ? 'MMR vs SBMM bracket over time' : 'Skill bracket over time';
-  return '' +
-  '<div class="panel mode-head"><div class="mh-top"><h2><span class="mnum">MODE ' + id + '</span>' + m.name + '</h2><span class="era">' + m.era + '</span></div>' +
-  '<p class="see"><strong>What to look for:</strong> ' + m.see + '</p>' +
-  '<details class="how"><summary>How This Works</summary><p>' + m.how + '</p></details>' + paramsHTML(id) + '</div>' +
-  '<div class="stats" id="' + P + 'stats"></div>' +
-  '<div class="panel"><div class="strip-head"><h3>Match timeline</h3><span class="muted" style="font-size:13px">Click a match to inspect its lobby' + (id===5 ? '. Pink dot = host migration, red square = cheater in lobby' : '') + '</span></div><div class="strip" id="' + P + 'strip"></div></div>' +
-  '<div class="charts">' +
-    '<div class="panel chart span2 tall"><h3>' + ratingTitle + '</h3><canvas id="' + P + 'rating"></canvas></div>' +
-    '<div class="panel chart span2"><h3>Your K/D per match</h3><canvas id="' + P + 'kd"></canvas></div>' +
-    '<div class="panel chart"><h3 id="' + P + 'skillTitle">Lobby skill distribution</h3><canvas id="' + P + 'skill"></canvas></div>' +
-    '<div class="panel chart"><h3 id="' + P + 'pingTitle">Lobby ping distribution</h3><canvas id="' + P + 'ping"></canvas></div>' +
-    extrasHTML(id) +
-  '</div>' +
-  '<div class="panel"><h3 id="' + P + 'tableTitle">Lobby</h3><div class="tablewrap"><table class="lobby" id="' + P + 'table"></table></div></div>';
-}
-function card(label, value, cls, sub){
-  return '<div class="stat ' + (cls||'') + '"><div class="l">' + label + '</div><div class="v">' + value + '</div>' + (sub ? '<div class="s">' + sub + '</div>' : '') + '</div>';
-}
 
-/* =========================================================
-   CHART BUILDERS (shared by mode views and compare)
-   ========================================================= */
-function selectedRec(run){ var R = run.results; if (!R.length) return null; return R[run.selected >= 0 && run.selected < R.length ? run.selected : R.length-1]; }
-
-function drawRatingChart(cv, run, opt){
-  opt = opt || {};
-  var m = MODES[run.mode], R = run.results, sel = selectedRec(run);
-  var you = state.basePool[0];
-  var rating = [[0, run.startRating]].concat(R.map(function(r){ return [r.n, r.ratingAfter]; }));
-  var bracket = [[0, run.startBracket]].concat(R.map(function(r){ return [r.n, r.bracketAfter]; }));
-  var lobby = R.map(function(r){ return [r.n, r.lobbyAvg]; });
-  var series = [];
-  var mainColor = opt.color || C.green;
-  if (m.usesMMR){
-    series.push({label:'Your MMR', color:mainColor, data:rating, width:3.5, points:true, pointR:3.5});
-    if (state.showBracket || opt.forceBracket) series.push({label:'SBMM bracket (midpoint)', color:C.blue, data:bracket, step:true, width:2.5, dash:[8,4]});
-  } else {
-    series.push({label:'Your SBMM bracket (midpoint)', color:opt.color || C.blue, data:bracket, step:true, width:3.5, points:true, pointR:3});
+/* ---------- stat cards ---------- */
+function card(l, v, cls, hint){ return '<div class="stat '+(cls||'')+'"><div class="l">'+l+'</div><div class="v">'+v+'</div>'+(hint?'<div class="h">'+hint+'</div>':'')+'</div>'; }
+function statsHTML(mode, s, compact){
+  if(!s) return card('Status','Ready','info','Press Run Simulation or Step');
+  var C = MODE_CFG[mode], out = '';
+  out += card('Win rate', pct(s.winRate), s.winRate >= 0.5 ? 'good' : 'bad');
+  out += card('Average K/D', s.avgKD.toFixed(2), '');
+  out += card('K/D swing', s.kdSD.toFixed(2), s.kdSD > 0.4 ? 'bad' : s.kdSD < 0.25 ? 'good' : 'warn', 'std dev across matches');
+  out += card('Yo-yo index', mode===5 ? '0' : s.yoyo.toFixed(1), mode===5 || s.yoyo < 2 ? 'good' : s.yoyo > 8 ? 'bad' : 'warn', mode===5 ? 'no rating exists' : 'avg rating move per match');
+  out += card('Blowout rate', pct(s.blowout), s.blowout > 0.25 ? 'bad' : s.blowout < 0.1 ? 'good' : 'warn', 'winner scored 2x loser');
+  if(compact) return out;
+  out += card('Lobby difficulty swing', s.lobbySwing.toFixed(1), s.lobbySwing > 8 ? 'bad' : s.lobbySwing < 4 ? 'good' : 'warn', 'avg change in lobby skill');
+  out += card('Avg lobby ping', s.avgPing.toFixed(0)+' ms', 'info');
+  out += card('Simulated quit rate', pct(s.quit), s.quit > 0.17 ? 'bad' : 'warn', 'avg chance a player backs out');
+  if(mode===1) out += card('Bracket expansions', s.expansions, 'info', 'searches widened to +/-1 or +/-2');
+  if(mode===3 || mode===5){
+    out += card('Bottom 30% KPM', fmt1(s.kpmBot===null?null:s.kpmBot), 'bad', 'kills per minute');
+    out += card('Top 10% KPM', fmt1(s.kpmTop===null?null:s.kpmTop), 'good', 'kills per minute');
   }
-  series.push({label:'Lobby difficulty (avg skill of other 11)', color:C.amber, data:lobby, width:1.8, dash:[3,4], alpha:0.85});
-  series.push({label:'Your hidden true skill', color:'#9999aa', data:[[0, you.trueSkill],[MATCHES, you.trueSkill]], width:1.5, dash:[2,6]});
-  var markers = [];
-  R.forEach(function(r){ if (r.migration) markers.push({x:r.n, color:C.pink, label:'HM'}); });
-  lineChart(cv, {xMin:0, xMax:MATCHES, yMin:0, yMax:100, xLabel:'Match number', yLabel:m.usesMMR ? 'Rating (0-100)' : 'Skill (0-100)',
-    series:series, markers:markers, selectedX: sel && !opt.noSel ? sel.n : null,
-    xTicks:[0,5,10,15,20,25,30], extraLegend: markers.length ? [{label:'Host migration', color:C.pink, dash:[3,3]}] : null,
-    empty: R.length ? null : 'Press Run or Step to start the simulation'});
-}
-function drawKDChart(cv, run, opt){
-  opt = opt || {};
-  var m = MODES[run.mode], R = run.results, sel = selectedRec(run);
-  var data = R.map(function(r){ return [r.n, r.youKD]; });
-  var maxKD = Math.max.apply(null, [2.5].concat(R.map(function(r){ return r.youKD; })));
-  var yMax = Math.min(5, Math.ceil(maxKD*2)/2);
-  var extra = [{label:'Win', color:C.green, kind:'dot'}, {label:'Loss', color:C.red, kind:'dot'}];
-  var rings = null;
-  if (m.p2p){ rings = R.map(function(r){ return r.youHost ? C.pink : null; }); extra.push({label:'You were host', color:C.pink, kind:'ring'}); }
-  var markers = [];
-  R.forEach(function(r){ if (r.migration) markers.push({x:r.n, color:C.pink, label:'HM'}); });
-  lineChart(cv, {xMin:0.5, xMax:MATCHES+0.5, yMin:0, yMax:yMax, xLabel:'Match number', yLabel:'Kill / death ratio',
-    series:[{label:'Your K/D', color:opt.color || C.blue, data:data, width:2.5, points:true, pointR:5,
-             pointColors:R.map(function(r){ return r.win ? C.green : C.red; }), rings:rings}],
-    extraLegend:extra, markers:markers, refLines:[{y:1, color:'#777790', label:'K/D 1.0'}],
-    selectedX: sel && !opt.noSel ? sel.n : null, xTicks:[1,5,10,15,20,25,30],
-    empty: R.length ? null : 'No matches played yet'});
-}
-function drawLobbySkill(cv, run){
-  var sel = selectedRec(run), m = MODES[run.mode];
-  if (!sel){ barChart(cv, {bars:[], yMax:100, yLabel:'Hidden true skill', empty:'No lobby yet'}); return; }
-  var rows = sel.rows.slice().sort(function(a,b){ return b.trueSkill - a.trueSkill; });
-  barChart(cv, {yMax:100, yLabel:'Hidden true skill', rotate:true, maxBar:44,
-    legend:[{label:'Your team', color:C.blue, kind:'box'}, {label:'Enemy team', color:C.red, kind:'box'}, {label:'You', color:C.green, kind:'box'}, {label:'Lobby average', color:C.amber, dash:[5,5]}],
-    refLines:[{y:mean(sel.rows.map(function(r){ return r.trueSkill; })), color:C.amber}],
-    bars: rows.map(function(r){ return {value:r.trueSkill, color: r.isYou ? C.green : (r.team===sel.youTeam ? C.blue : C.red),
-      label:r.name, labelColor: r.isYou ? C.green : C.muted, labelBold:r.isYou,
-      tag: r.cheater ? 'CHEAT' : r.isHost ? 'HOST' : r.party ? 'PARTY' : null, tagColor: r.cheater ? C.red : r.party ? C.amber : C.pink}; })});
-}
-function drawLobbyPing(cv, run){
-  var sel = selectedRec(run), m = MODES[run.mode];
-  if (!sel){ barChart(cv, {bars:[], yMax:120, yLabel:'Ping (ms)', empty:'No lobby yet'}); return; }
-  var rows = sel.rows.slice().sort(function(a,b){ return a.ping - b.ping; });
-  var mx = Math.max(120, Math.max.apply(null, rows.map(function(r){ return r.ping; })) + 15);
-  barChart(cv, {yMax:mx, yLabel: m.p2p ? 'Ping to host (ms)' : 'Ping to server (ms)', rotate:true, maxBar:44,
-    legend:[{label:'<30', color:C.green, kind:'box'}, {label:'30-60', color:C.yellow, kind:'box'}, {label:'60-90', color:C.amber, kind:'box'}, {label:'>90', color:C.red, kind:'box'}, {label:'Avg ' + Math.round(sel.avgPing) + 'ms', color:C.blue, dash:[5,5]}],
-    refLines:[{y:sel.avgPing, color:C.blue}],
-    bars: rows.map(function(r){ return {value:r.ping, color:pingColor(r.ping), outline: r.isYou ? '#ffffff' : null,
-      label:r.name, labelColor: r.isYou ? C.green : C.muted, labelBold:r.isYou, tag: r.isHost ? 'HOST' : null, tagColor:C.pink}; })});
+  if(mode===4){
+    out += card('Lobby persistence', pct(s.persistence), 'good', 'players kept between matches');
+    out += card('Fairness: felt vs real', s.fairP.toFixed(0)+' / '+s.fairA.toFixed(0), 'warn', 'perceived / actual (out of 100)');
+    out += card('Unique players met', s.unique, 'info');
+  }
+  if(C.usesMMR) out += card('MMR range', s.ratingRange.toFixed(0)+' pts', s.ratingRange > 30 ? 'bad' : 'warn', 'highest minus lowest');
+  return out;
 }
 
-/* =========================================================
-   RENDER: MODE VIEWS
-   ========================================================= */
-function renderMode(id){
-  var run = getRun(id), m = MODES[id], P = 'm' + id + '-', R = run.results, sel = selectedRec(run), met = runMetrics(run);
-  var you = run.pool[0];
-  // Stats cards
-  var h = '';
-  h += card('Matches played', R.length + ' / ' + MATCHES, 'info');
-  if (sel){
-    h += card('Match ' + sel.n + ' result', (sel.win ? 'WIN ' : 'LOSS ') + sel.yourScore + ':' + sel.enemyScore, sel.win ? 'good' : 'bad', sel.blowout ? 'Blowout (2x score)' : 'Team kills decide the winner');
-    h += card('Your K/D (match ' + sel.n + ')', fmt(sel.youKD), sel.youKD >= 1 ? 'good' : 'bad', sel.youKills + ' kills / ' + sel.youDeaths + ' deaths');
-    var dr = sel.ratingAfter - sel.ratingBefore;
-    h += card(m.usesMMR ? 'Your MMR' : 'Your bracket', m.usesMMR ? fmt(sel.ratingAfter,1) : String(sel.bracket), '',
-      m.usesMMR ? ((dr >= 0 ? '+' : '') + fmt(dr,1) + ' this match. Bracket ' + sel.bracket) : 'Static. Reviewed every 20 matches');
-    h += card('Lobby avg ping', Math.round(sel.avgPing) + 'ms', '', 'Yours: ' + sel.youPing + 'ms' + (sel.youHost ? ' (you are host)' : ''));
-  } else {
-    h += card('Result', '-') + card('Your K/D', '-') + card(m.usesMMR ? 'Your MMR' : 'Your bracket', m.usesMMR ? fmt(run.startRating,1) : String(you.sbmmBracket)) + card('Lobby avg ping', '-');
-  }
-  h += card('Yo-yo index', fmt(met.move,1), met.move > 4 ? 'bad' : 'good', 'Avg rating change per match. ' + met.flips + ' direction flips');
-  h += card('K/D swing', fmt(met.kdSD), met.kdSD > 0.45 ? 'bad' : 'good', 'Std dev of your K/D. Avg K/D ' + fmt(met.kdMean));
-  h += card('Blowout rate', pct(met.blow), met.blow > 0.15 ? 'bad' : '', 'Winner scored 2x the loser');
-  h += card('Win rate', pct(met.win), '', 'Simulated quit rate ' + pct(met.quit));
-  if (id === 4 && sel){
-    h += card('Lobby kept', sel.stayed + ' / 11', 'info', sel.left.length + ' left after last match');
-    h += card('Feels fair', Math.round(sel.perceived) + '/100', 'good', 'Actual MMR fairness: ' + Math.round(sel.actual) + '/100');
-  }
-  if (id === 5){
-    h += card('Host', sel ? (sel.youHost ? 'YOU' : esc(sel.host)) : '-', sel && sel.youHost ? 'good' : 'info', sel ? (sel.youHost ? 'You play at 0ms' : 'Host plays at 0ms') : '');
-    h += card('Host migrations', String(met.migrations), met.migrations ? 'bad' : '', 'You hosted ' + met.hosted + ' of ' + met.n + ' matches');
-    h += card('No server-side validation', '&#9888; Cheats undetectable', 'warn wide', sel && sel.cheater ? 'Cheater in this lobby right now. Nothing on a central server can see it.' : 'Lobbies with a cheater so far: ' + met.cheats);
-  }
-  $(P + 'stats').innerHTML = h;
+/* ---------- series builders ---------- */
+function ratingSeries(mode, recs, overlay){
+  var C = MODE_CFG[mode];
+  var lobby = {label:'Lobby average skill', color:COL.amber, data:recs.map(function(r){ return r.lobbyAvg; }), dash:[6,4], width:1.8};
+  var truth = {label:'Your true skill', color:'#666677', data:recs.map(function(r){ return r.youSkill; }), dash:[2,4], width:1.5};
+  if(mode===1) return [{label:'Your SBMM bracket (static)', color:COL.blue, data:recs.map(function(r){ return r.rating; }), width:3, points:true}, lobby, truth];
+  if(mode===5) return [{label:'Your skill (no rating exists)', color:'#aaaabb', data:recs.map(function(r){ return r.rating; }), width:3}, {label:'Lobby average skill', color:COL.amber, data:lobby.data, width:2, points:true}];
+  var s = [{label:'Your MMR (updates every match)', color:COL.green, data:recs.map(function(r){ return r.rating; }), width:3, points:true}];
+  if(overlay) s.push({label:'Your SBMM bracket', color:COL.blue, data:recs.map(function(r){ return r.sbmmLine; }), width:2.5});
+  s.push(lobby);
+  return s;
+}
+function matchmakerLabel(mode){ return mode===1 ? 'SBMM bracket' : mode===5 ? 'No rating (your skill)' : 'MMR'; }
 
-  // Timeline strip
-  var s = '';
-  for (var i=0; i<MATCHES; i++){
-    var r = R[i];
-    if (!r){ s += '<button class="chip" disabled>' + (i+1) + '</button>'; continue; }
-    var isSel = sel && sel.n === r.n;
-    s += '<button class="chip ' + (r.win ? 'w' : 'l') + (isSel ? ' sel' : '') + '" data-idx="' + i + '" title="Match ' + r.n + ': ' + (r.win?'Win':'Loss') + ', K/D ' + fmt(r.youKD) + '">' + r.n +
-         (r.migration ? '<span class="hm"></span>' : '') + (id===5 && r.cheater ? '<span class="ch"></span>' : '') + '</button>';
+/* ---------- renderers ---------- */
+function selIndex(mode){
+  if(!S.revealed) return -1;
+  var v = S.sel[mode];
+  return v == null || v > S.revealed ? S.revealed-1 : v-1;
+}
+function renderMode(mode){
+  var sim = S.sims[mode], n = S.revealed, recs = sim.records.slice(0,n), sum = summary(sim, n);
+  var idx = selIndex(mode), rec = idx >= 0 ? sim.records[idx] : null;
+  var note = n ? null : 'Press Run Simulation or Step to play matches';
+  el('stats-'+mode).innerHTML = statsHTML(mode, sum);
+  drawLine(el('c'+mode+'-rating'), {series:ratingSeries(mode, recs, S.opt.overlay), yLabel: mode===1 ? 'Rating (skill scale)' : 'MMR / skill (1-200 scale)', minSpan:20, selected:idx, note:note});
+  drawLine(el('c'+mode+'-kd'), {series:[{label:'Your K/D', color:COL.green, data:recs.map(function(r){ return r.youKD; }), width:2.5, points:true}], refLines:[{y:1, label:'1.0 = even', color:'#666677'}], yLabel:'K/D ratio', minSpan:1.2, floor:0, selected:idx, note:note});
+  drawSkillSpread(el('c'+mode+'-skill'), rec);
+  drawPingBars(el('c'+mode+'-ping'), rec);
+  renderLobby(mode, rec, idx);
+  if(mode===3){
+    var s2 = summary(S.sims[2], n);
+    drawBars(el('c3-kpm'), {groups:['Bottom 30% of pool','Top 10% of pool'], series:[{label:'Mode 2: SBMM + MMR', color:COL.blue, values:[s2?s2.kpmBot:null, s2?s2.kpmTop:null]},{label:'Mode 3: Open', color:COL.amber, values:[sum?sum.kpmBot:null, sum?sum.kpmTop:null]}],
+      yLabel:'Kills per minute', valueLabels:function(v){ return v.toFixed(2); }, note:note});
+    var mq = [1,2,3,4,5].map(function(k){ var x = summary(S.sims[k], n); return x ? x.quit*100 : 0; });
+    drawBars(el('c3-quit'), {groups:['1 SBMM','2 SBMM+MMR','3 Open','4 Classic','5 None'], outline:2, legend:false,
+      series:[{label:'Quit rate', color:COL.blue, values:mq, colors:['#335','#4488ff','#ffaa00','#335','#335'].map(function(c,i){ return i===1?COL.blue:i===2?COL.amber:'#3a3a55'; })}],
+      yLabel:'Quit rate (%)', valueLabels:function(v){ return v.toFixed(1)+'%'; }, note: n ? null : note});
   }
-  $(P + 'strip').innerHTML = s;
-
-  drawRatingChart($(P + 'rating'), run);
-  drawKDChart($(P + 'kd'), run);
-  $(P + 'skillTitle').textContent = 'Lobby skill distribution' + (sel ? ' (match ' + sel.n + ', spread ' + fmt(sel.lobbySD,1) + ')' : '');
-  $(P + 'pingTitle').textContent = 'Lobby ping distribution' + (sel ? ' (match ' + sel.n + ')' : '');
-  drawLobbySkill($(P + 'skill'), run);
-  drawLobbyPing($(P + 'ping'), run);
-
-  // Table
-  var t = '<thead><tr><th>Player</th><th>Team</th><th>True skill</th><th>' + (m.usesMMR ? 'MMR' : 'Bracket') + '</th><th>Ping</th><th>Kills</th><th>Deaths</th><th>K/D</th><th>Notes</th></tr></thead><tbody>';
-  if (sel){
-    sel.rows.slice().sort(function(a,b){ return (a.team===sel.youTeam?0:1) - (b.team===sel.youTeam?0:1) || b.kills - a.kills; }).forEach(function(r){
-      var mine = r.team === sel.youTeam, notes = '';
-      if (m.persistent && !r.isYou) notes += r.status === 'stayed' ? '<span class="tag stay">Stayed</span>' : '<span class="tag new">New</span>';
-      if (r.isHost) notes += '<span class="tag host">' + (sel.migration ? 'Host (left mid-match)' : 'Host 0ms') + '</span>';
-      if (r.isNewHost) notes += '<span class="tag host">New host</span>';
-      if (r.party) notes += '<span class="tag party">Party</span>';
-      if (r.cheater) notes += '<span class="tag cheat">Cheating, undetected</span>';
-      if (r.quit) notes += '<span class="tag quit">Quit after</span>';
-      t += '<tr class="' + (r.isYou ? 'you' : '') + '"><td>' + esc(r.name) + '</td><td class="' + (mine ? 'teamA' : 'teamB') + '">' + (mine ? 'Yours' : 'Enemy') + '</td><td>' + r.trueSkill + '</td><td>' +
-        (m.usesMMR ? fmt(r.mmr,1) : r.bracket) + '</td><td>' + r.ping + 'ms</td><td>' + r.kills + '</td><td>' + r.deaths + '</td><td>' + fmt(r.kd) + '</td><td>' + notes + '</td></tr>';
+  if(mode===4){
+    drawPersistence(el('c4-persist'), recs);
+    drawLine(el('c4-fair'), {series:[{label:'Perceived fairness', color:COL.green, data:recs.map(function(r){ return r.fairPerceived; }), width:2.5, points:true},{label:'Actual fairness', color:COL.red, data:recs.map(function(r){ return r.fairActual; }), width:2.5}], yMin:0, yMax:100, yLabel:'Fairness (0-100)', selected:idx, note:note});
+  }
+  if(mode===5){
+    var s1 = summary(S.sims[1], n);
+    drawBars(el('c5-kpm'), {groups:['Bottom 30% of pool','Top 10% of pool'], series:[{label:'Mode 1: SBMM only', color:COL.blue, values:[s1?s1.kpmBot:null, s1?s1.kpmTop:null]},{label:'Mode 5: No SBMM', color:COL.red, values:[sum?sum.kpmBot:null, sum?sum.kpmTop:null]}],
+      yLabel:'Kills per minute', valueLabels:function(v){ return v.toFixed(2); }, note:note});
+    var popPct = POOL.bracketCounts.map(function(c){ return c/POOL_SIZE*100; });
+    var lob = [0,0,0,0,0,0,0,0,0,0], tot = 0;
+    recs.forEach(function(r){ r.lobby.forEach(function(p){ if(!p.isYou){ lob[p.bracket-1]++; tot++; } }); });
+    drawBars(el('c5-pop'), {groups:['1','2','3','4','5','6','7','8','9','10'], highlight:bracketOf(S.Y.skill)-1,
+      series:[{label:'Share of 200,000 pool', color:'#55556a', values:popPct},{label:'Share of your lobbies', color:COL.red, values:lob.map(function(c){ return tot ? c/tot*100 : 0; })}],
+      yLabel:'% of players', xLabel:'Skill bracket', yFmt:function(v){ return v.toFixed(0)+'%'; }});
+  }
+}
+function renderLobby(mode, rec, idx){
+  var sl = el('sel-'+mode);
+  sl.max = Math.max(1, S.revealed); sl.disabled = !S.revealed; sl.value = idx+1;
+  el('selv-'+mode).textContent = S.revealed ? 'Match '+(idx+1) : '-';
+  if(!rec){ el('res-'+mode).innerHTML = ''; el('lobby-'+mode).innerHTML = '<p class="muted">No match played yet. Press Run Simulation or Step.</p>'; return; }
+  var C = MODE_CFG[mode];
+  var cls = rec.win === 1 ? 'win' : rec.win === 0 ? 'loss' : 'draw', word = rec.win === 1 ? 'WIN' : rec.win === 0 ? 'LOSS' : 'DRAW';
+  var extra = '';
+  if(rec.blowout) extra += '<span class="pill blow">BLOWOUT</span>';
+  if(mode===1 && rec.expansion>0) extra += '<span class="pill new">SEARCH WIDENED +/-'+rec.expansion+'</span>';
+  if(C.usesMMR) extra += '<span class="pill '+(rec.change>=0?'stay':'cheat')+'">MMR '+(rec.change>=0?'+':'')+rec.change.toFixed(1)+'</span>';
+  el('res-'+mode).innerHTML = '<span class="result '+cls+'">'+word+' '+rec.scoreYou+' - '+rec.scoreOpp+'</span>'+extra+
+    ' <span class="muted" style="font-size:13px;margin-left:6px">Lobby avg skill '+rec.lobbyAvg.toFixed(1)+', avg ping '+rec.avgPing.toFixed(0)+'ms</span>';
+  var tbl = function(t){
+    var rows = rec.lobby.filter(function(p){ return p.team===t; }).sort(function(a,b){ return b.kills-a.kills; });
+    var h = '<table><thead><tr><th>Player</th><th>Skill</th>'+(C.usesMMR?'<th>MMR</th>':'')+'<th>Ping</th><th>K</th><th>D</th><th>K/D</th></tr></thead><tbody>';
+    rows.forEach(function(p){
+      var badge = '';
+      if(mode===4 && !p.isYou && rec.m>1) badge = p.party ? '<span class="pill party">PARTY</span>' : p.stayed ? '<span class="pill stay">STAYED</span>' : '<span class="pill new">NEW</span>';
+      if(p.cheat) badge += '<span class="pill cheat">CHEATER</span>';
+      h += '<tr class="'+(p.isYou?'you':'')+'"><td>'+(p.isYou?'YOU':esc(p.name))+badge+'</td><td>'+p.skill.toFixed(0)+'</td>'+(C.usesMMR?'<td>'+p.mmr.toFixed(0)+'</td>':'')+
+           '<td style="color:'+pingColour(p.ping)+'">'+p.ping+'</td><td>'+p.kills+'</td><td>'+p.deaths+'</td><td>'+p.kd.toFixed(2)+'</td></tr>';
     });
-  } else t += '<tr><td colspan="9" class="muted">Run a match to fill the lobby.</td></tr>';
-  $(P + 'table').innerHTML = t + '</tbody>';
-  $(P + 'tableTitle').textContent = sel ? 'Lobby for match ' + sel.n + ' (score ' + sel.yourScore + ':' + sel.enemyScore + ')' : 'Lobby';
-
-  if (id === 3) renderPop();
-  if (id === 4) renderMode4Extras(run, sel);
-}
-function renderPop(){
-  if (!state.pop) state.pop = {2:popStats(2), 3:popStats(3)};
-  var a = state.pop[2], b = state.pop[3];
-  barChart($('m3-kpm'), {yMax:Math.max(2.5, Math.ceil(Math.max(a.top,b.top)*2)/2), yLabel:'Kills per minute (10-min match)', twoLine:true,
-    legend:[{label:'Standard SBMM + MMR (Mode 2)', color:C.blue, kind:'box'}, {label:'Open (Mode 3)', color:C.amber, kind:'box'}],
-    bars:[{value:a.bottom, valueText:fmt(a.bottom), color:C.blue, label:'Bottom 30%\nStandard'}, {value:b.bottom, valueText:fmt(b.bottom), color:C.amber, label:'Bottom 30%\nOpen'},
-          {value:a.top, valueText:fmt(a.top), color:C.blue, label:'Top 10%\nStandard'}, {value:b.top, valueText:fmt(b.top), color:C.amber, label:'Top 10%\nOpen'}]});
-  var q = a.quit > 0 ? (b.quit/a.quit - 1) : 0;
-  $('m3-popstats').innerHTML =
-    card('Quit rate', pct(b.quit), b.quit > a.quit ? 'bad' : '', 'Standard: ' + pct(a.quit) + ' (' + (q >= 0 ? '+' : '') + Math.round(q*100) + '% in Open). Activision reported +32.7%') +
-    card('Blowout rate', pct(b.blow), b.blow > a.blow ? 'bad' : '', 'Standard: ' + pct(a.blow)) +
-    card('Mid-tier K/D swing', fmt(b.midKdSD), b.midKdSD > a.midKdSD ? 'bad' : '', 'Standard: ' + fmt(a.midKdSD) + '. Activision reported +59.2% "Not Fun" ratings');
-}
-function renderMode4Extras(run, sel){
-  var box = $('m4-persist');
-  if (!sel){ box.innerHTML = '<span class="muted">Run a match to see who stays.</span>'; $('m4-left').textContent = ''; }
-  else {
-    box.innerHTML = sel.rows.map(function(r){
-      var cls = r.isYou ? 'you' : r.party ? 'party' : r.status;
-      var lbl = r.isYou ? 'You' : r.party ? 'Party stack' : (r.status === 'stayed' ? 'Stayed' : 'New (MMR-sorted)');
-      return '<div class="slot ' + cls + '"><b style="color:' + (r.isYou ? C.green : C.text) + '">' + esc(r.name) + '</b><span class="muted">' + lbl + '</span><br><span class="muted">MMR ' + fmt(r.mmr,0) + '</span></div>';
-    }).join('');
-    $('m4-left').textContent = sel.left.length ? 'Left before this match: ' + sel.left.join(', ') : (sel.n === 1 ? 'First match: the lobby is built from scratch.' : 'Nobody left before this match.');
-  }
-  var R = run.results;
-  lineChart($('m4-fair'), {xMin:0.5, xMax:MATCHES+0.5, yMin:0, yMax:100, xLabel:'Match number', yLabel:'Fairness score', xTicks:[1,5,10,15,20,25,30],
-    series:[{label:'How fair it feels (familiar faces)', color:C.green, data:R.map(function(r){ return [r.n, r.perceived]; }), width:3, points:true, pointR:3},
-            {label:'Actual skill fairness (MMR spread)', color:C.red, data:R.map(function(r){ return [r.n, r.actual]; }), width:3, points:true, pointR:3}],
-    selectedX: sel ? sel.n : null, empty: R.length ? null : 'No matches played yet'});
+    return h+'</tbody></table>';
+  };
+  el('lobby-'+mode).innerHTML = '<div class="teams"><div class="tablewrap"><div class="teamtitle a">Your team: '+rec.scoreYou+'</div>'+tbl(0)+'</div><div class="tablewrap"><div class="teamtitle b">Enemy team: '+rec.scoreOpp+'</div>'+tbl(1)+'</div></div>';
 }
 
-/* =========================================================
-   RENDER: COMPARE
-   ========================================================= */
-function miniStats(met, m){
-  return card('Yo-yo index', fmt(met.move,1), met.move > 4 ? 'bad' : 'good', 'Avg rating move') +
-         card('Direction flips', String(met.flips), met.flips > 8 ? 'bad' : 'good', 'Up/down reversals') +
-         card('K/D swing', fmt(met.kdSD), met.kdSD > 0.45 ? 'bad' : 'good', 'Std dev') +
-         card('Blowouts', pct(met.blow), met.blow > 0.15 ? 'bad' : '', '') +
-         card('Avg ping', met.n ? Math.round(met.ping) + 'ms' : '-', '', m.p2p ? 'Host plays at 0ms' : 'Via data centre') +
-         card(m.p2p ? 'Host migrations' : 'Win rate', m.p2p ? String(met.migrations) : pct(met.win), '', '');
-}
 function renderCompare(){
-  var A = state.cmpA, B = state.cmpB, ra = getRun(A), rb = getRun(B), ma = MODES[A], mb = MODES[B];
-  $('cA-title').textContent = 'Mode ' + A + ': ' + ma.name;
-  $('cB-title').textContent = 'Mode ' + B + ': ' + mb.name;
-  drawRatingChart($('cA-rating'), ra, {color:CMP_COLORS[0], noSel:true});
-  drawRatingChart($('cB-rating'), rb, {color:CMP_COLORS[1], noSel:true});
-  drawKDChart($('cA-kd'), ra, {color:CMP_COLORS[0], noSel:true});
-  drawKDChart($('cB-kd'), rb, {color:CMP_COLORS[1], noSel:true});
-  var a = runMetrics(ra), b = runMetrics(rb);
-  $('cA-stats').innerHTML = miniStats(a, ma);
-  $('cB-stats').innerHTML = miniStats(b, mb);
+  var a = S.cmpA, b = S.cmpB, n = S.revealed, note = n ? null : 'Press Run Simulation or Step to play matches';
+  var A = S.sims[a], B = S.sims[b], ra = A.records.slice(0,n), rb = B.records.slice(0,n), sa = summary(A,n), sb = summary(B,n);
+  el('cmpTitleA').innerHTML = '<span style="color:'+COL.blue+'">A</span> Mode '+a+': '+MODE_CFG[a].title;
+  el('cmpTitleB').innerHTML = '<span style="color:'+COL.red+'">B</span> Mode '+b+': '+MODE_CFG[b].title;
+  el('cmpStatsA').innerHTML = statsHTML(a, sa, true);
+  el('cmpStatsB').innerHTML = statsHTML(b, sb, true);
+  var sA = ratingSeries(a, ra, S.opt.overlay), sB = ratingSeries(b, rb, S.opt.overlay);
+  var all = []; sA.concat(sB).forEach(function(s){ s.data.forEach(function(v){ if(v!=null) all.push(v); }); });
+  var lo = all.length ? Math.min.apply(null, all) : 40, hi = all.length ? Math.max.apply(null, all) : 70;
+  if(hi-lo < 20){ var c = (hi+lo)/2; lo = c-10; hi = c+10; }
+  var pv = (hi-lo)*0.1;
+  drawLine(el('cmpRatingA'), {series:sA, yMin:lo-pv, yMax:hi+pv, yLabel:'Rating', note:note});
+  drawLine(el('cmpRatingB'), {series:sB, yMin:lo-pv, yMax:hi+pv, yLabel:'Rating', note:note});
+  var kds = ra.concat(rb).map(function(r){ return r.youKD; });
+  var kHi = Math.max(2, kds.length ? Math.max.apply(null, kds)*1.1 : 2);
+  drawLine(el('cmpKdA'), {series:[{label:'Your K/D', color:COL.green, data:ra.map(function(r){ return r.youKD; }), width:2.5, points:true}], refLines:[{y:1,color:'#666677'}], yMin:0, yMax:kHi, yLabel:'K/D', note:note});
+  drawLine(el('cmpKdB'), {series:[{label:'Your K/D', color:COL.green, data:rb.map(function(r){ return r.youKD; }), width:2.5, points:true}], refLines:[{y:1,color:'#666677'}], yMin:0, yMax:kHi, yLabel:'K/D', note:note});
+  drawLine(el('cmpRating'), {series:[
+      {label:'A: Mode '+a+' '+matchmakerLabel(a), color:COL.blue, data:ra.map(function(r){ return r.rating; }), width:3, points:true},
+      {label:'B: Mode '+b+' '+matchmakerLabel(b), color:COL.red, data:rb.map(function(r){ return r.rating; }), width:3, points:true},
+      {label:'Your true skill', color:'#666677', data:ra.map(function(r){ return r.youSkill; }), dash:[2,4], width:1.5}],
+    minSpan:20, yLabel:'Rating (1-200 scale)', note:note});
+  drawBars(el('cmpVar'), {groups:['K/D swing (std dev)','Yo-yo index / 10'], series:[
+      {label:'A: Mode '+a, color:COL.blue, values:[sa?sa.kdSD:null, sa?(a===5?0:sa.yoyo/10):null]},
+      {label:'B: Mode '+b, color:COL.red, values:[sb?sb.kdSD:null, sb?(b===5?0:sb.yoyo/10):null]}],
+    valueLabels:function(v){ return v.toFixed(2); }, yLabel:'Variance', note:note});
+  drawLine(el('cmpLobby'), {series:[
+      {label:'A: Mode '+a, color:COL.blue, data:ra.map(function(r){ return r.lobbyAvg; }), width:2.5, points:true},
+      {label:'B: Mode '+b, color:COL.red, data:rb.map(function(r){ return r.lobbyAvg; }), width:2.5, points:true}],
+    minSpan:20, yLabel:'Lobby average skill', note:note});
+  el('cmpVerdict').innerHTML = verdict(a, b, sa, sb);
+}
+function verdict(a, b, sa, sb){
+  if(!sa || !sb) return 'Pick two modes and press <b>Run Simulation</b>. Both run with the same player, the same 200,000-player pool and the same form every match, so the only thing that changes is the matchmaking rules.';
+  var yo = function(m, s){ return m===5 ? 0 : s.yoyo; };
+  var t = 'After <b>'+sa.n+'</b> matches. Mode '+a+' moved your rating <b>'+yo(a,sa).toFixed(1)+'</b> points per match with a K/D swing of <b>'+sa.kdSD.toFixed(2)+'</b>. Mode '+b+' moved it <b>'+yo(b,sb).toFixed(1)+'</b> points per match with a K/D swing of <b>'+sb.kdSD.toFixed(2)+'</b>. ';
+  var key = [a,b].sort().join(',');
+  if(key==='1,2') t += 'Both modes have the same skill brackets. The only thing Mode 2 adds is MMR, and that is exactly where the yo-yo comes from. SBMM has been in COD since 2007. The yo-yo arrived with MMR in 2016.';
+  else if(key==='2,3') t += 'Open Matchmaking loosened the skill brackets, but MMR is untouched, so the rubber band is still there. Blowouts went from '+pct(a===2?sa.blowout:sb.blowout)+' to '+pct(a===3?sa.blowout:sb.blowout)+'.';
+  else if(key==='2,5') t += 'No SBMM gets rid of the yo-yo because nothing is adjusting your lobbies, but blowouts go from '+pct(a===2?sa.blowout:sb.blowout)+' to '+pct(a===5?sa.blowout:sb.blowout)+'. No yo-yo is not the same as good matches.';
+  else if(key==='1,5') t += 'Basic brackets with no MMR keep blowouts at '+pct(a===1?sa.blowout:sb.blowout)+'. With no matchmaking at all it is '+pct(a===5?sa.blowout:sb.blowout)+'. That gap is what simple SBMM was protecting you from.';
+  else if(key==='2,4' || key==='3,4') t += 'Classic keeps the lobby together, but the MMR line still moves every match. Same engine, different paint.';
+  else t += 'Same player, same pool, same form. Only the rules changed.';
+  return t;
+}
 
-  var lineFor = function(run){ return [[0, run.startRating]].concat(run.results.map(function(r){ return [r.n, r.ratingAfter]; })); };
-  var you = state.basePool[0];
-  lineChart($('c-mmr'), {xMin:0, xMax:MATCHES, yMin:0, yMax:100, xLabel:'Match number', yLabel:'Matchmaking rating (0-100)', xTicks:[0,5,10,15,20,25,30],
-    series:[{label:'Mode ' + A + ': ' + (ma.usesMMR ? 'MMR' : 'skill bracket'), color:CMP_COLORS[0], data:lineFor(ra), width:3.5, points:true, pointR:3.5, step:!ma.usesMMR},
-            {label:'Mode ' + B + ': ' + (mb.usesMMR ? 'MMR' : 'skill bracket'), color:CMP_COLORS[1], data:lineFor(rb), width:3.5, points:true, pointR:3.5, step:!mb.usesMMR},
-            {label:'Your hidden true skill', color:'#9999aa', data:[[0,you.trueSkill],[MATCHES,you.trueSkill]], width:1.5, dash:[2,6]}],
-    empty: (ra.results.length || rb.results.length) ? null : 'Press Run to simulate both modes side by side'});
-  var mxSD = Math.max(1, Math.ceil(Math.max(a.kdSD, b.kdSD)*4)/4 + 0.25);
-  barChart($('c-kdvar'), {yMax:mxSD, yLabel:'Std dev of your K/D', maxBar:110,
-    bars:[{value:a.kdSD, valueText:fmt(a.kdSD), color:CMP_COLORS[0], label:'Mode ' + A + ': ' + ma.short},
-          {value:b.kdSD, valueText:fmt(b.kdSD), color:CMP_COLORS[1], label:'Mode ' + B + ': ' + mb.short}]});
-  var mxL = Math.max(5, Math.ceil(Math.max(a.lobbySwing, b.lobbySwing)) + 2);
-  barChart($('c-lobby'), {yMax:mxL, yLabel:'Std dev of lobby avg skill', maxBar:110,
-    bars:[{value:a.lobbySwing, valueText:fmt(a.lobbySwing,1), color:CMP_COLORS[0], label:'Mode ' + A + ': ' + ma.short},
-          {value:b.lobbySwing, valueText:fmt(b.lobbySwing,1), color:CMP_COLORS[1], label:'Mode ' + B + ': ' + mb.short}]});
+function renderTiers(){
+  var n = S.revealed, note = n ? null : 'Press Run Simulation or Step to play matches';
+  var cols = [COL.blue, COL.red, COL.amber], names = ['Low tier','Mid tier','Top tier'], skills = [33,66,100];
+  var ser = S.tiers.map(function(sim,i){ return {label:names[i]+' (skill '+skills[i]+')', color:cols[i], width:3, points:true, data:sim.records.slice(0,n).map(function(r){ return r.rating - sim.start; })}; });
+  drawLine(el('tierDev'), {series:ser, refLines:[{y:0, color:'#666677', label:'starting MMR'}], minSpan:20, yLabel:'MMR change from start', note:note});
+  S.tiers.forEach(function(sim,i){
+    var r = sim.records.slice(0,n);
+    drawLine(el('tier'+i), {series:[{label:'MMR', color:cols[i], width:2.5, points:true, data:r.map(function(x){ return x.rating; })},{label:'Lobby avg skill', color:'#888899', dash:[5,4], width:1.5, data:r.map(function(x){ return x.lobbyAvg; })}], minSpan:20, yLabel:'MMR', note:note});
+  });
+  var h = '<thead><tr><th>Player</th><th>K-factor strength</th><th>Yo-yo index</th><th>MMR range</th><th>K/D swing</th><th>Avg K/D</th><th>Win rate</th></tr></thead><tbody>';
+  S.tiers.forEach(function(sim,i){
+    var s = summary(sim, n);
+    h += '<tr><td><span class="swatch" style="background:'+cols[i]+'"></span>'+names[i]+' (skill '+skills[i]+')</td><td>'+(sim.kStr*100).toFixed(0)+'%</td>'+
+      (s ? '<td>'+s.yoyo.toFixed(1)+' pts</td><td>'+s.ratingRange.toFixed(0)+' pts</td><td>'+s.kdSD.toFixed(2)+'</td><td>'+s.avgKD.toFixed(2)+'</td><td>'+pct(s.winRate)+'</td>' : '<td colspan="5" class="muted">Run the simulation to fill this in</td>')+'</tr>';
+  });
+  el('tierTable').innerHTML = h+'</tbody>';
+}
 
-  var v;
-  if (!a.n && !b.n) v = 'Press <b>Run</b> to play the same 30 matches under both systems. Watch the rating lines: one system holds steady, the other swings.';
-  else {
-    v = 'Same 150 players. Same "You". Same seed. In <b>Mode ' + A + ' (' + ma.name + ')</b> your rating moved <b>' + fmt(a.move,1) + '</b> points per match and changed direction <b>' + a.flips + '</b> times. ' +
-        'In <b>Mode ' + B + ' (' + mb.name + ')</b> it moved <b>' + fmt(b.move,1) + '</b> points per match and changed direction <b>' + b.flips + '</b> times. ';
-    if (ma.usesMMR !== mb.usesMMR){
-      var noM = ma.usesMMR ? mb : ma, yesM = ma.usesMMR ? ma : mb;
-      v += 'Both systems use skill brackets. Only <b>' + yesM.name + '</b> adds MMR. <span class="r">The yo-yo appears exactly where MMR is switched on.</span>';
-      if (noM.p2p) v += ' The price of going back: host advantage, host migrations and no server-side anti-cheat.';
-    } else if (ma.usesMMR && mb.usesMMR){
-      v += 'Both run MMR underneath, so <span class="r">both still yo-yo</span>. Changing how lobbies are built does not remove the rubber band.';
-    } else v += 'Neither uses MMR, so neither yo-yos. The differences come from connection and lobby rules.';
+function renderNetworkInfo(){
+  var i = Math.max(0, S.revealed-1);
+  el('netWhich').textContent = S.revealed ? 'Showing your lobby from match '+(i+1)+': Mode 5 on the left, Mode 2 on the right.' : 'Preview of match 1 lobbies: Mode 5 on the left, Mode 2 on the right.';
+}
+
+function render(){
+  el('matchNum').textContent = S.revealed;
+  var t = S.tab;
+  if(t[0]==='m' && t.length===2) renderMode(+t[1]);
+  else if(t==='compare') renderCompare();
+  else if(t==='tiers') renderTiers();
+  else if(t==='network') renderNetworkInfo();
+}
+
+/* ---------- animation loop for network diagrams ---------- */
+function animate(t){
+  var i = Math.max(0, S.revealed-1);
+  if(S.sims[5]){
+    if(S.tab==='network'){
+      drawNetwork(el('netFree'), S.sims[5].records[i], t, 'Mode 5: connection only');
+      drawNetwork(el('netMM'), S.sims[2].records[i], t, 'Mode 2: matchmade by MMR');
+    } else if(S.tab==='m4'){
+      var j = selIndex(4);
+      drawNetwork(el('c4-net'), S.sims[4].records[j >= 0 ? j : 0], t, 'Mode 4 lobby');
+    }
   }
-  $('c-verdict').innerHTML = v;
+  requestAnimationFrame(animate);
 }
 
-/* =========================================================
-   RENDER: NETWORK VIEW
-   ========================================================= */
-function netNewLobby(){
-  var rng = makeRng(state.seed + '|net' + (state.netCount++));
-  var pool = state.basePool, you = pool[0], ex = {}; ex[you.id] = 1;
-  var lobby = [you].concat(buildLobby(MODES[5], you, pool, rng, ex, LOBBY-1));
-  state.net = {rng:rng, lobby:lobby, hostId:pickHost(lobby, rng).id, mig:null};
-}
-function netData(type){
-  if (!state.net) netNewLobby();
-  var n = state.net, host = n.lobby.filter(function(p){ return p.id === n.hostId; })[0], you = state.basePool[0];
-  var mig = null;
-  if (n.mig){
-    var el = performance.now()/1000 - n.mig.start, left = n.mig.dur - el;
-    if (left <= 0) finishMigration(); else mig = {left:left};
-  }
-  if (type === 'p2p') return {type:'p2p', migrating:mig, nodes:n.lobby.map(function(p){ return {name:p.name, isYou:p.isYou, isHost:p.id===n.hostId, ping:p2pPing(p, host)}; })};
-  return {type:'dedicated', dc:'Data centre: ' + you.region, nodes:n.lobby.map(function(p){ return {name:p.name, isYou:p.isYou, ping:effDed(p, you.region)}; })};
-}
-function finishMigration(){
-  var n = state.net, old = n.lobby.filter(function(p){ return p.id === n.hostId; })[0];
-  n.mig = null;
-  if (!old.isYou){
-    n.lobby = n.lobby.filter(function(p){ return p !== old; });
-    var ex = {}; n.lobby.forEach(function(p){ ex[p.id] = 1; }); ex[old.id] = 1;
-    n.lobby = n.lobby.concat(buildLobby(MODES[5], state.basePool[0], state.basePool, n.rng, ex, 1));
-  }
-  n.hostId = pickHost(n.lobby.filter(function(p){ return p !== old; }), n.rng).id;
-  renderNetInfo();
-}
-function renderNetInfo(){
-  if (!state.net) netNewLobby();
-  var n = state.net, host = n.lobby.filter(function(p){ return p.id === n.hostId; })[0], you = state.basePool[0];
-  var others = n.lobby.filter(function(p){ return p !== host; }).map(function(p){ return p2pPing(p, host); });
-  var ded = n.lobby.map(function(p){ return effDed(p, you.region); });
-  var youP2P = p2pPing(you, host), youDed = effDed(you, you.region);
-  $('net-p2p-info').innerHTML = 'Host: <b style="color:' + (host.isYou ? C.green : C.text) + '">' + (host.isYou ? 'YOU' : esc(host.name)) + '</b> at 0ms. Everyone else averages ' + Math.round(mean(others)) + 'ms. ' +
-    'Your ping: <b style="color:#00ff88">' + youP2P + 'ms</b>. The host is about ' + Math.round(mean(others)) + 'ms ahead of the average player.';
-  $('net-ded-info').innerHTML = 'Average ' + Math.round(mean(ded)) + 'ms, lowest ' + Math.min.apply(null, ded) + 'ms. Nobody plays at 0ms. Your ping: <b style="color:#00ff88">' + youDed + 'ms</b>.';
-}
-
-/* =========================================================
-   VIEW ROUTING AND CONTROLS
-   ========================================================= */
-function activeRuns(){
-  var v = state.view;
-  if (v.charAt(0) === 'm') return [getRun(+v.slice(1))];
-  if (v === 'compare') return state.cmpA === state.cmpB ? [getRun(state.cmpA)] : [getRun(state.cmpA), getRun(state.cmpB)];
-  return [];
-}
-function renderCurrent(){
-  var v = state.view;
-  if (v.charAt(0) === 'm') renderMode(+v.slice(1));
-  else if (v === 'compare') renderCompare();
-  else if (v === 'network') renderNetInfo();
-  renderStatus();
-}
-function renderStatus(){
-  var runs = activeRuns(), txt;
-  if (!runs.length) txt = 'Seed: ' + state.seed;
-  else txt = runs.map(function(r){ return 'Mode ' + r.mode + ': ' + r.results.length + '/' + MATCHES; }).join('  |  ') + '  |  Seed: ' + state.seed;
-  $('status').textContent = txt;
-  var net = state.view === 'network';
-  ['btnRun','btnStep','btnReset','btnExport'].forEach(function(id){ $(id).disabled = net; });
-}
-function renderPoolPanel(){
-  var pool = state.basePool, you = pool[0], counts = [0,0,0,0,0,0,0,0,0,0];
-  pool.forEach(function(p){ counts[bracketOf(p.trueSkill)-1]++; });
-  var yb = bracketOf(you.trueSkill);
-  barChart($('poolChart'), {yMax:Math.max(10, Math.ceil(Math.max.apply(null,counts)/10)*10), yLabel:'Players', xLabel:'Skill bracket (by true skill)', maxBar:20,
-    bars:counts.map(function(c,i){ return {value:c, color: i+1 === yb ? C.green : C.blue, label:String(i+1), labelColor: i+1===yb ? C.green : C.muted}; })});
-  var skills = pool.map(function(p){ return p.trueSkill; });
-  $('poolInfo').textContent = 'Average skill ' + fmt(mean(skills),1) + ', spread ' + fmt(sd(skills),1) + '. Green bar = your true-skill bracket. Same pool for every mode.';
-  $('youInfo').innerHTML = 'Your stats put you in SBMM bracket <b style="color:#00ff88">' + you.sbmmBracket + '</b> with a starting MMR of <b style="color:#00ff88">' + you.mmr + '</b>. True skill (hidden): ' + you.trueSkill + '.';
-}
-
-function stopRun(){
-  if (state.timer){ clearTimeout(state.timer); state.timer = null; }
-  var b = $('btnRun'); b.classList.remove('running'); b.innerHTML = '&#9654; Run 30 Matches';
-}
+/* ---------- controls ---------- */
+function stopRun(){ S.running = false; clearTimeout(S.timer); el('btnRun').textContent = 'Run Simulation'; }
 function tick(){
-  var runs = activeRuns(), any = false;
-  runs.forEach(function(r){ if (stepRun(r)) any = true; });
-  renderCurrent();
-  if (!any || runs.every(function(r){ return r.results.length >= MATCHES; })){ stopRun(); return; }
-  state.timer = setTimeout(tick, state.speed);
+  if(!S.running) return;
+  if(S.revealed >= MATCHES){ stopRun(); return; }
+  S.revealed++; updatePoolInfo(); render();
+  if(S.revealed >= MATCHES){ stopRun(); toast('30 matches complete'); return; }
+  S.timer = setTimeout(tick, +el('speed').value);
 }
-function toggleRun(){
-  if (state.timer){ stopRun(); return; }
-  var runs = activeRuns(); if (!runs.length) return;
-  if (runs.every(function(r){ return r.results.length >= MATCHES; })) runs.forEach(function(r){ resetRun(r.mode); });
-  if (state.instant){ activeRuns().forEach(function(r){ while (stepRun(r)); }); renderCurrent(); return; }
-  var b = $('btnRun'); b.classList.add('running'); b.innerHTML = '&#10074;&#10074; Pause';
+function run(){
+  if(S.running){ stopRun(); return; }
+  if(S.revealed >= MATCHES){ S.revealed = 0; }
+  S.running = true; el('btnRun').textContent = 'Pause';
   tick();
 }
-function flash(msg){ var f = $('flash'); f.textContent = msg; f.classList.add('show'); clearTimeout(flash._t); flash._t = setTimeout(function(){ f.classList.remove('show'); }, 1800); }
-
-function switchView(v){
-  stopRun();
-  state.view = v;
-  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(t){ t.classList.toggle('active', t.getAttribute('data-view') === v); });
-  Array.prototype.forEach.call(document.querySelectorAll('.view'), function(s){ s.classList.toggle('active', s.id === 'view-' + v); });
-  renderCurrent();
+function step(){ stopRun(); if(S.revealed < MATCHES){ S.revealed++; updatePoolInfo(); render(); } }
+function instant(){ stopRun(); S.revealed = MATCHES; updatePoolInfo(); render(); }
+function reset(){ stopRun(); S.revealed = 0; S.sel = {1:null,2:null,3:null,4:null,5:null}; recompute(); }
+function applySeed(seed){
+  stopRun(); SEED = (seed >>> 0) || 1; el('seed').value = SEED;
+  el('poolInst').textContent = 'Generating 200,000 players...';
+  setTimeout(function(){ generatePool(); S.revealed = 0; S.sel = {1:null,2:null,3:null,4:null,5:null}; recompute(); toast('Pool of 200,000 players generated (seed '+SEED+')'); }, 20);
 }
-function allModes(){ return [1,2,3,4,5]; }
-function rebuildEverything(resetToZero){
-  stopRun();
-  if (resetToZero){ state.runs = {}; } else resimulate(allModes().filter(function(md){ return state.runs[md]; }));
-  state.pop = null; netNewLobby();
-  renderPoolPanel(); renderCurrent();
-}
+var toastTimer = null;
+function toast(msg){ var t = el('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200); }
 
 function exportCSV(){
-  var runs = activeRuns().filter(function(r){ return r.results.length; });
-  if (!runs.length){ flash('Run a simulation first'); return; }
-  var head = ['mode','mode_name','match','result','your_score','enemy_score','your_kills','your_deaths','your_kd','rating_before','rating_after','sbmm_bracket',
-              'lobby_avg_skill','lobby_skill_spread','opponent_avg_skill','lobby_avg_ping_ms','your_ping_ms','blowout','host','you_host','host_migration','cheater_in_lobby','players_quit','lobby'];
-  var lines = [head.join(',')];
-  var q = function(s){ s = String(s); return /[",\n|]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; };
-  runs.forEach(function(run){
-    var m = MODES[run.mode];
-    run.results.forEach(function(r){
-      lines.push([run.mode, q(m.name), r.n, r.win ? 'WIN' : 'LOSS', r.yourScore, r.enemyScore, r.youKills, r.youDeaths, r.youKD.toFixed(2),
-        r.ratingBefore.toFixed(1), r.ratingAfter.toFixed(1), r.bracket, r.lobbyAvg.toFixed(1), r.lobbySD.toFixed(1), r.oppAvg.toFixed(1),
-        r.avgPing.toFixed(0), r.youPing, r.blowout ? 1 : 0, q(r.host || ''), r.youHost ? 1 : 0, r.migration ? 1 : 0, r.cheater ? 1 : 0, r.quits,
-        q(r.rows.map(function(x){ return x.name + ':' + x.trueSkill + (x.team === r.youTeam ? 'A' : 'B'); }).join(' '))].join(','));
+  var n = S.revealed;
+  if(!n){ toast('Play at least one match first'); return; }
+  var rows = [['seed','mode','mode_name','match','your_true_skill','rating_used_by_matchmaker','mmr_after_match','mmr_change','sbmm_bracket','kills','deaths','kd','result','your_team_score','enemy_score','blowout','lobby_avg_skill','lobby_skill_sd','lobby_avg_ping','players_kept_from_last_match','perceived_fairness','actual_fairness','avg_quit_probability']];
+  for(var m=1;m<=5;m++){
+    var C = MODE_CFG[m];
+    S.sims[m].records.slice(0,n).forEach(function(r){
+      rows.push([SEED, m, C.title, r.m, r.youSkill, r.rating.toFixed(2), C.usesMMR ? r.mmrAfter.toFixed(2) : '', C.usesMMR ? r.change.toFixed(2) : '', C.hasSBMM ? r.bracketBefore : '',
+        r.youKills, r.youDeaths, r.youKD.toFixed(3), r.win===1?'win':r.win===0?'loss':'draw', r.scoreYou, r.scoreOpp, r.blowout?1:0,
+        r.lobbyAvg.toFixed(2), r.lobbySD.toFixed(2), r.avgPing.toFixed(1), m===4 ? r.stayedCount : '', r.fairPerceived.toFixed(1), r.fairActual.toFixed(1), r.quitAvg.toFixed(3)]);
     });
-  });
-  var blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'});
+  }
+  var csv = rows.map(function(r){ return r.map(function(v){ v = String(v); return /[",]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }).join(','); }).join('\n');
+  var blob = new Blob([csv], {type:'text/csv'});
   var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'matchmaking-sim_seed-' + state.seed.replace(/[^a-z0-9_-]/gi,'') + '_modes-' + runs.map(function(r){ return r.mode; }).join('-') + '.csv';
+  a.href = URL.createObjectURL(blob); a.download = 'sbmm-sim-seed'+SEED+'-'+n+'matches.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
-  flash('CSV downloaded');
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  toast('CSV exported');
 }
 
-/* =========================================================
-   ANIMATION LOOP (topology canvases)
-   ========================================================= */
-function topoForRun(mode, type){
-  var run = state.runs[mode]; if (!run) return null;
-  var sel = selectedRec(run); if (!sel) return null;
-  return {type:type, dc:'Data centre: ' + state.basePool[0].region,
-          nodes: sel.rows.map(function(r){ return {name:r.name, ping:r.ping, isYou:r.isYou, isHost:r.isHost, cheater:r.cheater}; })};
-}
-var topoTargets = [];
-function animLoop(ts){
-  var t = ts/1000;
-  topoTargets.forEach(function(tg){ var cv = $(tg.id); if (cv && cv.offsetParent !== null) drawTopology(cv, tg.get(), t); });
-  requestAnimationFrame(animLoop);
+function setTab(t){
+  S.tab = t;
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(b){ b.classList.toggle('active', b.getAttribute('data-tab')===t); });
+  Array.prototype.forEach.call(document.querySelectorAll('.tabpanel'), function(p){ p.classList.toggle('active', p.id==='tab-'+t); });
+  render();
 }
 
-/* =========================================================
-   INIT
-   ========================================================= */
 function init(){
-  for (var i=1;i<=5;i++) $('view-m' + i).innerHTML = modeViewHTML(i);
-  var opts = allModes().map(function(md){ return '<option value="' + md + '">Mode ' + md + ': ' + MODES[md].name + '</option>'; }).join('');
-  $('cmpA').innerHTML = opts; $('cmpB').innerHTML = opts; $('cmpA').value = '1'; $('cmpB').value = '2';
-
-  genPool(); netNewLobby();
-
-  // Tabs
-  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(t){ t.addEventListener('click', function(){ switchView(t.getAttribute('data-view')); }); });
-  // Toolbar
-  $('btnRun').addEventListener('click', toggleRun);
-  $('btnStep').addEventListener('click', function(){ stopRun(); var any = false; activeRuns().forEach(function(r){ if (stepRun(r)) any = true; }); if (!any) flash('All 30 matches played. Press Reset to start again.'); renderCurrent(); });
-  $('speed').addEventListener('input', function(){ state.speed = +this.value; $('speedVal').textContent = this.value + 'ms'; });
-  $('instant').addEventListener('change', function(){ state.instant = this.checked; });
-  $('btnReset').addEventListener('click', function(){ stopRun(); activeRuns().forEach(function(r){ resetRun(r.mode); }); renderCurrent(); flash('Reset to starting values'); });
-  $('btnRegen').addEventListener('click', function(){
-    var s = ''; var chars = 'abcdefghjkmnpqrstuvwxyz23456789'; for (var i=0;i<6;i++) s += chars.charAt(Math.floor(Math.random()*chars.length));
-    state.seed = s; $('seed').value = s; genPool(); rebuildEverything(true); flash('New player pool (seed ' + s + ')');
+  buildModePanels();
+  var opts = ''; for(var m=1;m<=5;m++) opts += '<option value="'+m+'">Mode '+m+': '+MODE_CFG[m].title+'</option>';
+  el('cmpA').innerHTML = opts; el('cmpB').innerHTML = opts; el('cmpA').value = '1'; el('cmpB').value = '2';
+  el('tabs').addEventListener('click', function(e){ var b = e.target.closest('.tab'); if(b) setTab(b.getAttribute('data-tab')); });
+  el('btnRun').onclick = run; el('btnStep').onclick = step; el('btnInstant').onclick = instant; el('btnReset').onclick = reset;
+  el('btnRegen').onclick = function(){ applySeed(Math.floor(Math.random()*999999)+1); };
+  el('btnSeed').onclick = function(){ applySeed(+el('seed').value); };
+  el('btnExport').onclick = exportCSV;
+  el('speed').oninput = function(){ el('speedVal').textContent = this.value+' ms'; };
+  el('youSkill').oninput = function(){ el('skillVal').textContent = this.value; };
+  el('youSkill').onchange = recompute;
+  el('youPing').oninput = function(){ el('pingVal').textContent = this.value+' ms'; };
+  el('youPing').onchange = recompute;
+  el('vol').oninput = function(){ el('volVal').textContent = (+this.value).toFixed(2); recompute(); };
+  el('kdAuto').onchange = function(){ el('youKD').disabled = this.checked; recompute(); };
+  ['youKD','youRegion','youInput','protect','party','cheaters','tierMode'].forEach(function(id){ el(id).onchange = recompute; });
+  el('overlay').onchange = function(){ S.opt.overlay = this.checked; render(); };
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tier]'), function(b){
+    b.onclick = function(){ var v = b.getAttribute('data-tier'); el('youSkill').value = v; el('skillVal').textContent = v; el('kdAuto').checked = true; el('youKD').disabled = true; recompute(); };
   });
-  var applySeed = function(){ var v = $('seed').value.trim() || 'scotty'; state.seed = v; $('seed').value = v; genPool(); rebuildEverything(true); flash('Seed applied: ' + v); };
-  $('btnSeed').addEventListener('click', applySeed);
-  $('seed').addEventListener('keydown', function(e){ if (e.key === 'Enter') applySeed(); });
-  $('btnExport').addEventListener('click', exportCSV);
-
-  // You controls
-  var youChanged = function(){ applyYouTo(state.basePool[0]); $('yKd').value = state.you.kd.toFixed(2); rebuildEverything(false); };
-  $('ySkill').addEventListener('input', function(){ $('ySkillV').textContent = this.value; });
-  $('ySkill').addEventListener('change', function(){ state.you.skill = +this.value; youChanged(); });
-  $('yKdAuto').addEventListener('change', function(){ state.you.kdAuto = this.checked; $('yKd').disabled = this.checked; youChanged(); });
-  $('yKd').addEventListener('change', function(){ state.you.kd = clamp(+this.value || 1, 0.1, 5); youChanged(); });
-  $('yRegion').addEventListener('change', function(){ state.you.region = this.value; youChanged(); });
-  $('yInput').addEventListener('change', function(){ state.you.input = this.value; youChanged(); });
-  $('yPing').addEventListener('input', function(){ $('yPingV').textContent = this.value + 'ms'; });
-  $('yPing').addEventListener('change', function(){ state.you.ping = +this.value; youChanged(); });
-
-  // Mode parameters
-  Array.prototype.forEach.call(document.querySelectorAll('.volSlider'), function(sl){
-    sl.addEventListener('input', function(){
-      state.vol = +this.value;
-      Array.prototype.forEach.call(document.querySelectorAll('.volSlider'), function(o){ o.value = state.vol; });
-      Array.prototype.forEach.call(document.querySelectorAll('.volVal'), function(o){ o.textContent = state.vol.toFixed(2); });
-      stopRun(); resimulate([2,3,4].filter(function(md){ return state.runs[md]; })); state.pop = null; renderCurrent();
-    });
-  });
-  Array.prototype.forEach.call(document.querySelectorAll('.brToggle'), function(cb){
-    cb.addEventListener('change', function(){ state.showBracket = this.checked; Array.prototype.forEach.call(document.querySelectorAll('.brToggle'), function(o){ o.checked = state.showBracket; }); renderCurrent(); });
-  });
-  $('partyToggle').addEventListener('change', function(){ state.party = this.checked; stopRun(); resimulate([4]); renderCurrent(); });
-  $('cheatToggle').addEventListener('change', function(){ state.cheaters = this.checked; stopRun(); resimulate([5]); renderCurrent(); });
-
-  // Timeline chips (event delegation)
-  for (var k=1;k<=5;k++) (function(md){
-    $('m' + md + '-strip').addEventListener('click', function(e){
-      var b = e.target.closest('.chip'); if (!b || !b.hasAttribute('data-idx')) return;
-      getRun(md).selected = +b.getAttribute('data-idx'); renderMode(md);
-    });
-  })(k);
-
-  // Compare
-  $('cmpA').addEventListener('change', function(){ stopRun(); state.cmpA = +this.value; renderCurrent(); });
-  $('cmpB').addEventListener('change', function(){ stopRun(); state.cmpB = +this.value; renderCurrent(); });
   Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), function(b){
-    b.addEventListener('click', function(){
-      var p = b.getAttribute('data-preset').split(','); stopRun();
-      state.cmpA = +p[0]; state.cmpB = +p[1]; $('cmpA').value = p[0]; $('cmpB').value = p[1];
-      resetRun(state.cmpA); resetRun(state.cmpB); renderCurrent();
-    });
+    b.onclick = function(){ var p = b.getAttribute('data-preset').split(','); S.cmpA = +p[0]; S.cmpB = +p[1]; el('cmpA').value = p[0]; el('cmpB').value = p[1]; render(); };
   });
-
-  // Network
-  $('netNew').addEventListener('click', function(){ netNewLobby(); renderNetInfo(); });
-  $('netMig').addEventListener('click', function(){ if (!state.net.mig) state.net.mig = {start:performance.now()/1000, dur:4}; });
-
-  topoTargets = [
-    {id:'net-p2p', get:function(){ return netData('p2p'); }},
-    {id:'net-ded', get:function(){ return netData('dedicated'); }},
-    {id:'m4-topo', get:function(){ return topoForRun(4, 'dedicated'); }},
-    {id:'m5-topo', get:function(){ return topoForRun(5, 'p2p'); }}
-  ];
-  requestAnimationFrame(animLoop);
-
+  el('cmpA').onchange = function(){ S.cmpA = +this.value; render(); };
+  el('cmpB').onchange = function(){ S.cmpB = +this.value; render(); };
+  el('modePanels').addEventListener('input', function(e){
+    if(e.target.id && e.target.id.indexOf('sel-')===0){ var m = +e.target.getAttribute('data-mode'), v = +e.target.value; S.sel[m] = v >= S.revealed ? null : v; render(); }
+  });
+  document.addEventListener('keydown', function(e){
+    var tag = (e.target.tagName || '').toLowerCase();
+    if(tag==='input' || tag==='select' || tag==='textarea' || tag==='button') { if(!(tag==='button' && e.code==='ArrowRight')) return; }
+    if(e.code==='Space'){ e.preventDefault(); run(); }
+    else if(e.code==='ArrowRight'){ e.preventDefault(); step(); }
+  });
   var rt = null;
-  window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(function(){ renderPoolPanel(); renderCurrent(); }, 120); });
-
-  renderPoolPanel();
-  renderCurrent();
-
-  // Hooks for automated checks / curious viewers in the console
-  window.MMSim = {state:state, stepRun:stepRun, getRun:getRun, resetRun:resetRun, runMetrics:runMetrics, popStats:popStats, switchView:switchView, renderCurrent:renderCurrent};
+  window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(render, 120); });
+  generatePool();
+  recompute();
+  requestAnimationFrame(animate);
 }
-init();
-})();
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
