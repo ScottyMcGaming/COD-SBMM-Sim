@@ -75,4 +75,4 @@ YouTube: [youtube.com/@ScottyMcGaming](https://youtube.com/@ScottyMcGaming)
 
 ## Licence
 
-MIT: do what you want with it. If you use it in your own content, a credit would be appreciated but isn't required.
+MIT do what you want with it. If you use it in your own content, a credit would be appreciated but isn't required.
