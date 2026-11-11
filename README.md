@@ -12,7 +12,7 @@ This simulator lets you see it for yourself.
 
 ## What It Does
 
-Five simulation modes running against a pool of 200,000 players, a realistic 24-hour concurrent population for a major COD title, so you can compare them directly.
+Five simulation modes running against a pool of 2,000,000 players, which seems a realistic 24-hour concurrent population for a major COD title across all platforms, so you can compare them directly.
 
 **SBMM Only (Pre-2016)**: How matchmaking worked before MMR existed. Stable brackets, predictable lobbies, no rubber-banding.
 
