@@ -138,7 +138,7 @@ footer .links{color:var(--text)}
   <div>
     <h1>COD <span class="acc">Matchmaking</span> Simulator</h1>
     <p class="sub">Understanding the difference between SBMM, MMR, and why the community is arguing about the wrong thing</p>
-    <p class="credit">Built by Scotty McGaming — github.com/scottymcgaming</p>
+    <p class="credit">Built by Scotty McGaming: github.com/scottymcgaming</p>
   </div>
   <div class="poolbadge">
     <div class="big" id="poolSize">200,000</div>
@@ -189,7 +189,7 @@ footer .links{color:var(--text)}
         <select id="youInput"><option>Controller</option><option>Mouse+Keyboard</option></select>
       </div>
       <div class="field">
-        <div class="row"><span>Your ping</span><span class="val" id="pingVal">40 ms</span></div>
+        <div class="row"><span>Your ping</span><span class="val" id="pingVal">30 ms</span></div>
         <input type="range" id="youPing" min="15" max="120" value="40">
       </div>
     </div>
@@ -212,7 +212,7 @@ footer .links{color:var(--text)}
       <div style="font-size:14px;line-height:1.6">
         <div><b style="color:var(--green)">200,000</b> players, normally distributed skill (average 50, spread 15).</div>
         <div class="muted" id="poolDetail" style="font-size:13px"></div>
-        <div class="muted" style="font-size:13px;margin-top:6px">Every player's stats come from their ID and the seed, so the whole pool exists without storing 200,000 full profiles. Full profiles are only built for players who land in one of your lobbies.</div>
+        <div class="muted" style="font-size:13px;margin-top:6px">Every player's stats come from their ID and the seed, so the whole pool exists without storing 2,000,000 full profiles. Full profiles are only built for players who land in one of your lobbies.</div>
         <div style="margin-top:8px;font-size:13px">Shortcuts: <span class="kbd">Space</span> run/pause, <span class="kbd">&rarr;</span> step</div>
       </div>
     </div>
@@ -287,9 +287,9 @@ footer .links{color:var(--text)}
         <div class="tagline" id="netWhich"></div></div>
       <div class="grid">
         <div class="card"><h3>No Matchmaking (Connection Only)</h3><canvas id="netFree" class="h480"></canvas>
-          <div class="netcap">All traffic routes through infrastructure. No host advantage. Server-side validation active. But no skill filtering — anyone can be in your lobby.</div></div>
+          <div class="netcap">All traffic routes through infrastructure. No host advantage. Server-side validation active. No skill filtering. Anyone can be in your lobby.</div></div>
         <div class="card"><h3>Dedicated Server (With Matchmaking)</h3><canvas id="netMM" class="h480"></canvas>
-          <div class="netcap">All traffic routes through infrastructure. No host advantage. Server-side validation active. Matchmaking filters by skill — lobby composition is controlled.</div></div>
+          <div class="netcap">All traffic routes through infrastructure. No host advantage. Server-side validation active. Matchmaking filters by skill. Lobby composition is controlled.</div></div>
       </div>
     </section>
   </main>
@@ -311,7 +311,7 @@ footer .links{color:var(--text)}
    ===================================================================== */
 
 /* ---------- constants ---------- */
-var POOL_SIZE = 200000;
+var POOL_SIZE = 5000000;
 var MATCHES = 30;
 var LOGI = 12;            // skill-step constant for the logistic gunfight model
 var RATING_SCALE = 20;    // converts the K-factor formula into rating points on the 1-200 scale
