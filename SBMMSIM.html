@@ -101,15 +101,17 @@ footer p{margin:4px auto;max-width:120ch}
    <div class="row"><button class="go" id="run">Run</button><button id="step">Step</button><button id="instant">Instant</button><button id="reset">Reset</button><span id="status">0 / 30</span></div>
    <div class="row"><label for="speed">Speed</label><input type="range" id="speed" min="100" max="2000" step="50" value="500"><span class="val" id="speedV">500ms</span></div>
    <div class="row"><label for="seed">Seed</label><input type="text" id="seed" value="2026"><button id="regen">Regenerate Players</button></div>
-   <div class="row"><button id="csv">Export CSV</button><span class="pool">Pool <b>2,000,000</b> players, <span id="instCount">0</span> loaded into lobbies</span></div>
+   <div class="row"><label for="poolSize">Player pool</label><select id="poolSize"><option value="2000000">2,000,000</option><option value="1000000">1,000,000</option><option value="500000">500,000</option><option value="250000">250,000</option><option value="100000">100,000</option></select></div>
+   <div class="row"><button id="csv">Export CSV</button><span class="pool">Pool <b id="poolLabel">2,000,000</b> players, <span id="instCount">0</span> loaded into lobbies</span></div>
   </div>
   <div class="panel">
    <h3>System settings</h3>
    <div class="row"><label for="vol">MMR Aggressiveness</label><input type="range" id="vol" min="0.05" max="0.40" step="0.01" value="0.15"><span class="val" id="volV">0.15</span></div>
    <div class="row"><label class="inl"><input type="checkbox" id="overlay" checked> Show SBMM bracket overlay</label></div>
    <div class="row"><label class="inl"><input type="checkbox" id="lobLine" checked> Show lobby average skill line</label></div>
-   <div class="row"><label class="inl"><input type="checkbox" id="party"> Classic: I'm in a 6-stack party</label></div>
-   <div class="note">Aggressiveness affects Modes 2, 3 and 4. Modes 1 and 5 have no MMR.</div>
+   <div class="row"><label class="inl"><input type="checkbox" id="persist"> Persistent lobbies (keep lobby between matches)</label></div>
+   <div class="row"><label class="inl"><input type="checkbox" id="party"> I'm in a 6-stack party</label></div>
+   <div class="note">Aggressiveness affects Modes 2, 3 and 4. Modes 1 and 5 have no MMR. Persistent lobbies are always on in Mode 4 (Classic).</div>
   </div>
  </div>
 
@@ -125,7 +127,8 @@ footer p{margin:4px auto;max-width:120ch}
 
 <script>
 /*ENGINE START*/
-const POOL_SIZE=2000000, LOGI=30 /* gunfight skill step */, RATING_SCALE=55, MATCHES=30, CANDS=900, FORM_SD=4;
+let POOL_SIZE=2000000;
+const LOGI=30 /* gunfight skill step */, RATING_SCALE=55, MATCHES=30, CANDS=900, FORM_SD=4;
 const REGIONS=['EU-West','EU-East','NA-East','NA-West'];
 const TEAM_EDGE=0.8; // stronger team controls the map
 const CHURN=0.5; // chance a Classic lobby player moves on after a match;
@@ -161,7 +164,7 @@ function base(id){
  const r=mulberry32(mix(POOL_SEED,id));
  const skill=Math.round(clamp(50+15*gauss(r),1,100));
  const pr=r();
- const ping=Math.round(pr<0.7?30+r()*30:pr<0.88?5+r()*25:60+r()*60);
+ const ping=Math.round(pr<0.15?5+r()*20:pr<0.55?25+r()*35:pr<0.80?55+r()*45:pr<0.93?90+r()*50:130+r()*70);
  return{id,skill,ping,region:REGIONS[(r()*4)|0],input:r()<0.58?'Controller':'Mouse+Keyboard',cheat:r()<0.002,kdN:0.8+0.4*r(),kpmN:0.85+0.3*r()};
 }
 const N1=['x','','','','Its','The','Mr','iAm','Not','Lil','Big','oG','','Dr'];
@@ -180,11 +183,12 @@ function instantiate(b){
 // players searching right now, sampled from the full population
 function search(S,exclude){
  const out=[],r=S.r;let guard=0;
- while(out.length<CANDS&&guard++<CANDS*30){
+ const effectiveCands=Math.max(50,Math.round(CANDS*POOL_SIZE/2000000));
+ while(out.length<effectiveCands&&guard++<effectiveCands*30){
   const id=1+Math.floor(r()*POOL_SIZE);
   if(exclude.has(id))continue;
   const b=base(id);let ping=b.ping;
-  if(b.region!==S.you.region){if(r()>0.08)continue;ping+=80}
+  if(b.region!==S.you.region){if(r()>0.08)continue;ping+=80+Math.round(r()*60)}
   if(r()>0.55+0.45*b.skill/100)continue; // playtime weighting, better players play more
   const m=S.M.useMMR?clamp(b.skill+gauss(r)*6*dampOf(b.skill),1,200):b.skill;
   exclude.add(id);
@@ -196,10 +200,10 @@ function pick(S,cands,need,target,tight){
  const M=S.M,yp=S.you.ping;
  for(const c of cands){
   const pd=Math.abs(c.ping-yp);
-  const conn=pd/30+2*c.arr+(pd>80?50:0);
+  const conn=pd/20+2*c.arr+(pd>80?pd/8:0)+(pd>150?80:0);
   if(tight)c.s=Math.abs(c.mmr-target)/8+0.3*conn;
-  else if(M.id===1)c.s=Math.abs(bracketOf(c.b.skill)-target)*3+0.4*conn;
-  else c.s=M.skillW*Math.abs(c.mmr-target)/M.norm+(1-M.skillW)*conn;
+  else if(M.id===1)c.s=0.3*Math.abs(bracketOf(c.b.skill)-target)+0.7*conn;
+  else{const cw=Math.max(0.1,0.5-0.6*M.skillW);c.s=M.skillW*Math.abs(c.mmr-target)/M.norm+cw*conn;}
  }
  cands.sort((a,b)=>a.s-b.s);
  return cands.slice(0,need);
@@ -212,6 +216,7 @@ function mk(c,light){
 
 function simulate(modeId,cfg,light){
  const M=MODES[modeId],r=mulberry32(mix(cfg.seed,99991));
+ const usePersist=M.persist||cfg.persist;
  const start=clamp(cfg.kd*50,1,200);
  const you={id:0,name:'You',skill:cfg.skill,mmr:start,bracket:bracketOf(start),ping:cfg.ping,region:cfg.region,
   input:cfg.input,cheat:false,isYou:true,recent:[],quitP:0,stayed:false,party:false};
@@ -220,7 +225,7 @@ function simulate(modeId,cfg,light){
  for(let n=1;n<=MATCHES;n++){
   const mmrBefore=you.mmr,bracket=you.bracket,target=M.id===1?you.bracket:you.mmr;
   let others,stayed=0;
-  if(M.persist&&lobby){
+  if(usePersist&&lobby){
    const keep=[];
    for(const p of lobby){if(p.party||r()>CHURN+p.quitP*0.7){p.stayed=true;keep.push(p)}}
    stayed=keep.filter(p=>!p.party).length;
@@ -228,7 +233,7 @@ function simulate(modeId,cfg,light){
    others=keep.concat(pick(S,search(S,ex),11-keep.length,target).map(c=>mk(c,light)));
   }else{
    const ex=new Set();
-   if(M.persist&&cfg.party){
+   if(cfg.party){
     party=pick(S,search(S,ex),5,you.mmr,true).map(c=>{const p=mk(c,light);p.party=true;return p});
    }
    others=party.concat(pick(S,search(S,ex),11-party.length,target).map(c=>mk(c,light)));
@@ -246,7 +251,7 @@ function simulate(modeId,cfg,light){
    if(!A.includes(you)){const t=A;A=B;B=t}
   }
   // the match
-  const fam=M.persist&&n>1?stayed/Math.max(1,11-party.length):0;
+  const fam=usePersist&&n>1?stayed/Math.max(1,11-party.length):0;
   const tempo=r();
   for(const p of all)p._e=p.skill+gauss(r)*FORM_SD*(p.isYou?1-0.35*fam:1)-p.ping/10+(p.cheat?35:0);
   const eA=mean(A.map(p=>p._e)),eB=mean(B.map(p=>p._e));
@@ -267,7 +272,7 @@ function simulate(modeId,cfg,light){
    const ch=30*Math.tanh(kF*pd/30);p.mmr=clamp(p.mmr+ch,1,200);return ch;
   };
   let change=0;
-  if(M.useMMR){change=upd(you,mB);if(M.persist)others.forEach(p=>upd(p,A.includes(p)?mB:mA))}
+  if(M.useMMR){change=upd(you,mB);if(usePersist)others.forEach(p=>upd(p,A.includes(p)?mB:mA))}
   // quit chance and recent form
   all.forEach((p,i)=>{
    const ks=p._k/(p._k+p._d),lost=A.includes(p)?sA<sB:sB<sA;
@@ -284,9 +289,18 @@ function simulate(modeId,cfg,light){
   }
   const sk=others.map(p=>p.skill),lob=all.map(p=>p.skill);
   const actual=clamp(100-Math.abs(mean(A.map(p=>p.skill))-mean(B.map(p=>p.skill)))*5-sdev(lob)*1.5,0,100);
+  // queue time estimate
+  const poolRatio=POOL_SIZE/2000000;
+  const baseQueue=2+r()*3;
+  const poolPenalty=1/Math.max(0.05,poolRatio);
+  const skillEdge=Math.abs(cfg.skill-50)/50;
+  const strictness=M.skillW<0.3?1.0:M.skillW<0.5?1.4:M.useMMR?1.8:1.0;
+  const disbandCost=usePersist?1.0:(M.useMMR?2.5:1.3);
+  const edgePenalty=1+skillEdge*(M.useMMR?1.8:0.4);
+  const queueTime=Math.min(600,Math.round(baseQueue*poolPenalty*strictness*disbandCost*edgePenalty));
   out.push({n,mmrBefore,mmrAfter:you.mmr,change,bracket,bracketRating:bracket*10-5,k:you._k,d:you._d,kd,res,sA,sB,blow,
    oppAvg:mean(sk),lobbyMin:Math.min(...lob),lobbyMax:Math.max(...lob),lobbySD:sdev(lob),avgPing:mean(all.map(p=>p.ping)),
-   fam,stayed,actual,perceived:clamp(actual+35*fam+(Math.abs(sA-sB)/(sA+sB)<0.1?5:0),0,100),you:snap[0].q,lobby:snap});
+   fam,stayed,actual,perceived:clamp(actual+35*fam+(Math.abs(sA-sB)/(sA+sB)<0.1?5:0),0,100),you:snap[0].q,lobby:snap,queueTime});
  }
  return{mode:modeId,cfg,matches:out};
 }
@@ -299,9 +313,10 @@ function summarize(ms){
  const sw=[];for(let i=1;i<ms.length;i++)sw.push(Math.abs(ms[i].oppAvg-ms[i-1].oppAvg));
  return{n:ms.length,kdAvg:mean(ms.map(m=>m.kd)),kdSD:sdev(ms.map(m=>m.kd)),mmrMove:mean(ms.map(m=>Math.abs(m.change))),
   lobbySwing:mean(sw),win:ms.filter(m=>m.res==='W').length/ms.length,blow:ms.filter(m=>m.blow).length/ms.length,
-  ping:mean(ms.map(m=>m.avgPing)),quit:mean(allQ),quitLow:mean(lowQ),kpmLow:mean(low),kpmTop:mean(top),
+  ping:mean(ms.map(m=>m.avgPing)),pingSD:mean(ms.map(m=>sdev(m.lobby.map(p=>p.ping)))),quit:mean(allQ),quitLow:mean(lowQ),kpmLow:mean(low),kpmTop:mean(top),
   range:mean(ms.map(m=>m.lobbyMax-m.lobbyMin)),unique:ids.size,fam:mean(ms.slice(1).map(m=>m.fam)),
-  mmrLo:Math.min(...ms.map(m=>m.mmrBefore)),mmrHi:Math.max(...ms.map(m=>m.mmrBefore))};
+  mmrLo:Math.min(...ms.map(m=>m.mmrBefore)),mmrHi:Math.max(...ms.map(m=>m.mmrBefore)),
+  queueAvg:mean(ms.map(m=>m.queueTime))};
 }
 /*ENGINE END*/
 
@@ -322,15 +337,18 @@ const TABS=[['m1','Mode 1','SBMM Only'],['m2','Mode 2','SBMM + MMR'],['m3','Mode
 const state={tab:'m1',reveal:{},sel:{},cache:new Map(),timer:null,tier:{},seed:0,popStats:null};
 
 /* ---------- build DOM ---------- */
+function isPersistActive(id){return MODES[id].persist||$('persist').checked}
 function extraHTML(id){
- if(id===3)return`<div class="panel c6"><h3>Bottom 30% vs top 10% of players in your lobbies</h3><canvas id="m3-kpm" class="short"></canvas></div>
+ const persist=isPersistActive(id);
+ let h='';
+ if(id===3)h+=`<div class="panel c6"><h3>Bottom 30% vs top 10% of players in your lobbies</h3><canvas id="m3-kpm" class="short"></canvas></div>
  <div class="panel c6"><h3>Open vs SBMM + MMR (same player, same seed)</h3><canvas id="m3-quit" class="short"></canvas><div class="note">Activision's published figures for Open: 32.7% higher quit rates, 59.2% more 'Not Fun' ratings.</div></div>`;
- if(id===4)return`<div class="panel c6"><h3>Lobby persistence, who stayed and who is new</h3><canvas id="m4-persist" class="short"></canvas></div>
- <div class="panel c6"><h3>Perceived fairness vs actual fairness</h3><canvas id="m4-fair" class="short"></canvas><div class="note">The gap between the lines is the placebo. Familiar faces feel fairer, the lobby is not.</div></div>
- <div class="panel c12"><h3>Network path for this lobby: every packet goes through the data centre</h3><canvas id="m4-net" class="net"></canvas></div>`;
- if(id===5)return`<div class="panel c6"><h3>Who you actually play against</h3><canvas id="m5-pop" class="short"></canvas><div class="note">Bars show the share of the 2,000,000 pool in each skill bracket vs the share of players in your lobbies. Better players play more, so they turn up more.</div></div>
+ if(persist)h+=`<div class="panel c6"><h3>Lobby persistence, who stayed and who is new</h3><canvas id="m${id}-persist" class="short"></canvas></div>
+ <div class="panel c6"><h3>Perceived fairness vs actual fairness</h3><canvas id="m${id}-fair" class="short"></canvas><div class="note">The gap between the lines is the placebo. Familiar faces feel fairer, the lobby isn't.</div></div>
+ <div class="panel c12"><h3>Network path for this lobby: every packet goes through the data centre</h3><canvas id="m${id}-net" class="net"></canvas></div>`;
+ if(id===5)h+=`<div class="panel c6"><h3>Who you actually play against</h3><canvas id="m5-pop" class="short"></canvas><div class="note">Bars show the share of the ${POOL_SIZE.toLocaleString('en-GB')} pool in each skill bracket vs the share of players in your lobbies. Better players play more, so they turn up more.</div></div>
  <div class="panel c6"><h3>Bottom 30% vs top 10% of players in your lobbies</h3><canvas id="m5-kpm" class="short"></canvas></div>`;
- return'';
+ return h;
 }
 function modeHTML(m){
  const id=m.id,title=m.useMMR?'Your MMR over 30 matches':id===1?'Your skill bracket over 30 matches':'Your rating over 30 matches';
@@ -469,7 +487,7 @@ const pingCol=p=>p<30?G:p<60?Y:p<90?O:R;
 const pct=v=>(v*100).toFixed(0)+'%';
 
 /* ---------- state + sim access ---------- */
-function cfgNow(){return{seed:mix(state.seed,2),skill:+$('skill').value,kd:+$('kd').value||0.02,region:$('region').value,input:$('input').value,ping:+$('ping').value,vol:+$('vol').value,party:$('party').checked}}
+function cfgNow(){return{seed:mix(state.seed,2),skill:+$('skill').value,kd:+$('kd').value||0.02,region:$('region').value,input:$('input').value,ping:+$('ping').value,vol:+$('vol').value,persist:$('persist').checked,party:$('party').checked}}
 function getRes(id){
  const c=cfgNow(),k=id+'|'+JSON.stringify(c);
  let r=state.cache.get(k);
@@ -478,7 +496,7 @@ function getRes(id){
 }
 function setSeed(s){
  state.seed=strSeed(s);POOL_SEED=mix(state.seed,1);INST.clear();state.cache.clear();state.tier={};
- // pool make-up, estimated from 200,000 of the 2,000,000 IDs
+ // pool make-up, estimated from 200,000 of the POOL_SIZE IDs
  const cnt=new Array(10).fill(0),N=200000,step=POOL_SIZE/N;
  for(let i=0;i<N;i++)cnt[bracketOf(base(1+Math.floor(i*step)).skill)-1]++;
  state.popStats=cnt.map(c=>c/N);genNet();
@@ -508,16 +526,18 @@ function statTiles(id,s){
   ['Win rate',pct(s.win),'info'],['Blowouts',pct(s.blow),s.blow>0.2?'bad':s.blow>0.1?'warn':'good','2x score'],
   ['Lobby range',s.range.toFixed(0),s.range>45?'bad':s.range>25?'warn':'good','skill, low to high'],
   ['Avg ping',s.ping.toFixed(0)+'ms','info'],
+  ['Ping spread',s.pingSD.toFixed(0)+'ms',s.pingSD>30?'bad':s.pingSD>15?'warn':'good','avg lobby std dev'],
+  ['Queue time',s.queueAvg>=60?(s.queueAvg/60).toFixed(1)+'m':s.queueAvg.toFixed(0)+'s',s.queueAvg>60?'bad':s.queueAvg>20?'warn':'good','est. per match'],
   ['Quit risk',pct(s.quit),s.quit>0.08?'bad':'warn','avg per player'],
   ['Low-skill quit',pct(s.quitLow),s.quitLow>0.1?'bad':'warn','bottom 30%']];
- if(id===4)t.push(['Returning',pct(s.fam||0),'info','players kept'],['Unique players',s.unique,'info','seen in lobbies']);
+ if(isPersistActive(id))t.push(['Returning',pct(s.fam||0),'info','players kept'],['Unique players',s.unique,'info','seen in lobbies']);
  return t;
 }
 function lobbyTable(id,m){
- const M=MODES[id];
+ const M=MODES[id],persist=isPersistActive(id);
  const rows=m.lobby.slice().sort((a,b)=>a.team===b.team?b.k-a.k:a.team<b.team?-1:1);
- const head=`<tr><th>Team</th><th>Player</th><th>Skill</th><th>Bracket</th><th>MMR</th><th>Ping</th><th>Input</th><th>K</th><th>D</th><th>K/D</th>${M.persist?'<th>Status</th>':''}</tr>`;
- return`<table>${head}${rows.map(p=>`<tr class="${p.isYou?'you':''}"><td class="${p.team==='A'?'tA':'tB'}">${p.team==='A'?'Yours':'Enemy'}</td><td>${p.name}${p.cheat?' <span class="badge bad">cheater</span>':''}</td><td>${p.skill}</td><td>${M.id===5?'-':p.bracket}</td><td>${M.useMMR?p.mmr.toFixed(0):'-'}</td><td style="color:${pingCol(p.ping)}">${p.ping}ms</td><td>${p.input==='Controller'?'Pad':'MnK'}</td><td>${p.k}</td><td>${p.d}</td><td>${(p.k/p.d).toFixed(2)}</td>${M.persist?`<td>${p.isYou?'':p.party?'<span class="badge info">party</span>':p.stayed?'<span class="badge good">stayed</span>':'<span class="badge warn">new</span>'}</td>`:''}</tr>`).join('')}</table>`;
+ const head=`<tr><th>Team</th><th>Player</th><th>Skill</th><th>Bracket</th><th>MMR</th><th>Ping</th><th>Input</th><th>K</th><th>D</th><th>K/D</th>${persist?'<th>Status</th>':''}</tr>`;
+ return`<table>${head}${rows.map(p=>`<tr class="${p.isYou?'you':''}"><td class="${p.team==='A'?'tA':'tB'}">${p.team==='A'?'Yours':'Enemy'}</td><td>${p.name}${p.cheat?' <span class="badge bad">cheater</span>':''}</td><td>${p.skill}</td><td>${M.id===5?'-':p.bracket}</td><td>${M.useMMR?p.mmr.toFixed(0):'-'}</td><td style="color:${pingCol(p.ping)}">${p.ping}ms</td><td>${p.input==='Controller'?'Pad':'MnK'}</td><td>${p.k}</td><td>${p.d}</td><td>${(p.k/p.d).toFixed(2)}</td>${persist?`<td>${p.isYou?'':p.party?'<span class="badge info">party</span>':p.stayed?'<span class="badge good">stayed</span>':'<span class="badge warn">new</span>'}</td>`:''}</tr>`).join('')}</table>`;
 }
 function lobbyBars(cv,m){
  if(!m){barChart(cv,{labels:[],series:[],empty:'No match yet'});return}
@@ -548,7 +568,7 @@ function renderMode(id){
  $(`m${id}-tt`).textContent=m?`Lobby, match ${m.n}`:'Lobby';
  $(`m${id}-table`).innerHTML=m?lobbyTable(id,m):'<div class="note">No match yet.</div>';
  tiles($(`m${id}-stats`),statTiles(id,sm));
- $(`m${id}-mmrnote`).textContent=!sm?'':M.useMMR?`Your MMR has ranged from ${sm.mmrLo.toFixed(0)} to ${sm.mmrHi.toFixed(0)}, moving ${sm.mmrMove.toFixed(1)} points a match on average. Your true skill has not changed at all.`:
+ $(`m${id}-mmrnote`).textContent=!sm?'':M.useMMR?`Your MMR has ranged from ${sm.mmrLo.toFixed(0)} to ${sm.mmrHi.toFixed(0)}, moving ${sm.mmrMove.toFixed(1)} points a match on average. Your true skill hasn't changed at all.`:
   id===1?'Your bracket only moves on a slow review every 20 matches. Lobby difficulty stays put.':'Nothing tracks you between matches. Lobby difficulty is whoever happens to be searching.';
  if(id===3||id===5){
   const lab=['Kills per match','Quit risk %'];
@@ -560,16 +580,16 @@ function renderMode(id){
    series:[{label:'SBMM + MMR',color:B,values:[b.blow*100,b.quit*100,b.quitLow*100,b.lobbySwing]},{label:'Open',color:O,values:[sm.blow*100,sm.quit*100,sm.quitLow*100,sm.lobbySwing]}],
    vals:v=>v.toFixed(1),yLabel:'Value',legend:[{label:'SBMM + MMR',color:B,box:true},{label:`Open (quit ${sm.quit>=b.quit?'+':''}${((sm.quit/b.quit-1)*100).toFixed(0)}%)`,color:O,box:true}]}:{labels:[],series:[],empty:'No matches yet'});
  }
- if(id===4){
-  barChart($('m4-persist'),r?{labels:vis.map(x=>x.n),yMax:11,yLabel:'Players (of 11)',xLabel:'Match number',maxBar:22,
+ if(isPersistActive(id)){
+  barChart($(`m${id}-persist`),r?{labels:vis.map(x=>x.n),yMax:11,yLabel:'Players (of 11)',xLabel:'Match number',maxBar:22,
    series:[{label:'Stayed',color:G,values:vis.map(x=>x.stayed)},{label:'New',color:B,values:vis.map(x=>11-x.stayed-x.lobby.filter(p=>p.party).length)}]}:{labels:[],series:[],empty:'No matches yet'});
-  lineChart($('m4-fair'),{reveal:r,sel,yLabel:'Fairness (0 to 100)',minSpan:30,
+  lineChart($(`m${id}-fair`),{reveal:r,sel,yLabel:'Fairness (0 to 100)',minSpan:30,
    series:[{label:'Perceived fairness',color:G,data:ms.map(x=>x.perceived),w:3},{label:'Actual fairness',color:R,data:ms.map(x=>x.actual),w:3}]});
  }
  if(id===5){
   const sh=new Array(10).fill(0);let tot=0;vis.forEach(x=>x.lobby.forEach(p=>{if(!p.isYou){sh[p.bracket-1]++;tot++}}));
   barChart($('m5-pop'),{labels:['1-10','11-20','21-30','31-40','41-50','51-60','61-70','71-80','81-90','91-100'],yLabel:'% of players',xLabel:'Skill bracket',
-   series:[{label:'Whole 2,000,000 pool',color:B,values:state.popStats.map(v=>v*100)},{label:'Your lobbies',color:O,values:sh.map(v=>tot?v/tot*100:0)}],vals:v=>v>=0.5?v.toFixed(0):'',
+   series:[{label:'Whole '+POOL_SIZE.toLocaleString('en-GB')+' pool',color:B,values:state.popStats.map(v=>v*100)},{label:'Your lobbies',color:O,values:sh.map(v=>tot?v/tot*100:0)}],vals:v=>v>=0.5?v.toFixed(0):'',
    hl:[bracketOf(+$('skill').value)-1]});
  }
  renderTier(id);
@@ -608,15 +628,15 @@ function renderCompare(){
   series:ratingSeries(a,ra,'A').concat(ratingSeries(b,rb,'B')).map((s,i)=>s)});
  barChart($('c-var'),sa?{labels:[MODES[a].short,MODES[b].short],series:[{color:G,values:[sa.kdSD,sb.kdSD],colors:[G,R]}],vals:v=>v.toFixed(2),yLabel:'K/D standard deviation',maxBar:90,
   legend:[{label:'Higher = more rubber-banding',color:T2,box:true}]}:{labels:[],series:[],empty:'No matches yet'});
- $('c-verdict').innerHTML=sa?verdict(a,b,sa,sb):'Press Run to play the same 30 matches under both systems. Same you, same 2,000,000 players.';
+ $('c-verdict').innerHTML=sa?verdict(a,b,sa,sb):'Press Run to play the same 30 matches under both systems. Same you, same '+POOL_SIZE.toLocaleString('en-GB')+' players.';
 }
 function verdict(a,b,sa,sb){
  const A=MODES[a].short,Bn=MODES[b].short;
  const ratio=(x,y)=>y>0.01?(x/y).toFixed(1)+'x':'far';
- let t=`Same you, same 2,000,000 players. <b style="color:${G}">${A}</b>: K/D swing ${sa.kdSD.toFixed(2)}, lobby moves ${sa.lobbySwing.toFixed(1)} skill pts a match, blowouts ${pct(sa.blow)}. <b style="color:${R}">${Bn}</b>: K/D swing ${sb.kdSD.toFixed(2)}, lobby moves ${sb.lobbySwing.toFixed(1)}, blowouts ${pct(sb.blow)}. `;
+ let t=`Same you, same ${POOL_SIZE.toLocaleString('en-GB')} players. <b style="color:${G}">${A}</b>: K/D swing ${sa.kdSD.toFixed(2)}, lobby moves ${sa.lobbySwing.toFixed(1)} skill pts a match, blowouts ${pct(sa.blow)}. <b style="color:${R}">${Bn}</b>: K/D swing ${sb.kdSD.toFixed(2)}, lobby moves ${sb.lobbySwing.toFixed(1)}, blowouts ${pct(sb.blow)}. `;
  if(MODES[a].useMMR!==MODES[b].useMMR){
   const [mm,no,sm,sn]=MODES[a].useMMR?[A,Bn,sa,sb]:[Bn,A,sb,sa];
-  t+=sm.lobbySwing>sn.lobbySwing?`${mm} swings your lobbies ${ratio(sm.lobbySwing,sn.lobbySwing)} harder than ${no}. The difference is MMR.`:`${no} lobbies vary more, but that is random chaos, not a system reacting to you.`;
+  t+=sm.lobbySwing>sn.lobbySwing?`${mm} swings your lobbies ${ratio(sm.lobbySwing,sn.lobbySwing)} harder than ${no}. The difference is MMR.`:`${no} lobbies vary more, but that's random chaos, not a system reacting to you.`;
  }else if(sb.lobbySwing>sa.lobbySwing*1.15)t+=`${Bn} swings your lobbies ${ratio(sb.lobbySwing,sa.lobbySwing)} harder.`;
  else if(sa.lobbySwing>sb.lobbySwing*1.15)t+=`${A} swings your lobbies ${ratio(sa.lobbySwing,sb.lobbySwing)} harder.`;
  else t+='Both swing your lobbies by a similar amount.';
@@ -675,16 +695,19 @@ function drawTopo(cv,o,t){
 }
 function animate(t){
  if(state.tab==='net'){drawTopo($('net1'),NET.d1,t);drawTopo($('net2'),NET.d2,t);drawTopo($('net3'),NET.p1,t);drawTopo($('net4'),NET.p2,t)}
- else if(state.tab==='m4'){
-  const r=state.reveal.m4||0,sel=selIdx('m4'),cv=$('m4-net');
-  if(r){const m=getRes(4).matches[sel];drawTopo(cv,{players:m.lobby.map(p=>({name:p.name,skill:p.skill,ping:p.ping,you:p.isYou}))},t)}
-  else{const{ctx,w,h}=prep(cv);emptyMsg(ctx,w,h,'Run a match to see its network path')}
+ else if(state.tab[0]==='m'&&isPersistActive(+state.tab[1])){
+  const mid=+state.tab[1],r=state.reveal[state.tab]||0,sel=selIdx(state.tab),cv=$(`m${mid}-net`);
+  if(cv){if(r){const m=getRes(mid).matches[sel];drawTopo(cv,{players:m.lobby.map(p=>({name:p.name,skill:p.skill,ping:p.ping,you:p.isYou}))},t)}
+  else{const{ctx,w,h}=prep(cv);emptyMsg(ctx,w,h,'Run a match to see its network path')}}
  }
  requestAnimationFrame(animate);
 }
 
 /* ---------- main render + controls ---------- */
-function instCount(){$('instCount').textContent=INST.size.toLocaleString('en-GB')}
+function instCount(){
+ $('instCount').textContent=INST.size.toLocaleString('en-GB');
+ $('poolLabel').textContent=POOL_SIZE.toLocaleString('en-GB');
+}
 function render(){
  const k=state.tab;
  if(k[0]==='m')renderMode(+k[1]);else if(k==='cmp')renderCompare();
@@ -710,11 +733,11 @@ function changed(){render()}
 function exportCSV(){
  const k=state.tab;if(k==='net')return;
  const ids=k==='cmp'?[+$('cmpA').value,+$('cmpB').value]:[+k[1]];
- const c=cfgNow(),rows=[['mode','match','result','your_team_score','enemy_score','blowout','kills','deaths','kd','mmr_before','mmr_after','mmr_change','sbmm_bracket','lobby_avg_skill','lobby_min','lobby_max','avg_ping','quit_risk_you']];
+ const c=cfgNow(),rows=[['mode','match','result','your_team_score','enemy_score','blowout','kills','deaths','kd','mmr_before','mmr_after','mmr_change','sbmm_bracket','lobby_avg_skill','lobby_min','lobby_max','avg_ping','quit_risk_you','queue_time']];
  for(const id of ids)for(const m of getRes(id).matches)rows.push([MODES[id].name,m.n,m.res,m.sA,m.sB,m.blow?1:0,m.k,m.d,m.kd.toFixed(3),
   MODES[id].useMMR?m.mmrBefore.toFixed(2):'',MODES[id].useMMR?m.mmrAfter.toFixed(2):'',MODES[id].useMMR?m.change.toFixed(2):'',MODES[id].id===5?'':m.bracket,
-  m.oppAvg.toFixed(2),m.lobbyMin,m.lobbyMax,m.avgPing.toFixed(1),m.you.toFixed(3)]);
- const meta=`# seed=${$('seed').value} skill=${c.skill} kd=${c.kd} ping=${c.ping} region=${c.region} aggressiveness=${c.vol}\n`;
+  m.oppAvg.toFixed(2),m.lobbyMin,m.lobbyMax,m.avgPing.toFixed(1),m.you.toFixed(3),m.queueTime]);
+ const meta=`# seed=${$('seed').value} skill=${c.skill} kd=${c.kd} ping=${c.ping} region=${c.region} aggressiveness=${c.vol} pool=${POOL_SIZE}\n`;
  const blob=new Blob([meta+rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`sbmm-sim-${k}-seed${$('seed').value}.csv`;document.body.appendChild(a);a.click();
  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
@@ -731,6 +754,16 @@ function wire(){
  $('vol').addEventListener('input',()=>{$('volV').textContent=(+$('vol').value).toFixed(2);changed()});
  $('speed').addEventListener('input',()=>{$('speedV').textContent=$('speed').value+'ms';if(state.timer){stop();run()}});
  ['region','input','overlay','lobLine','party'].forEach(i=>$(i).addEventListener('change',changed));
+ $('persist').addEventListener('change',()=>{
+  state.cache.clear();state.tier={};state.reveal={};state.sel={};
+  buildDOM();
+ });
+ $('poolSize').addEventListener('change',()=>{
+  POOL_SIZE=+$('poolSize').value;
+  setSeed($('seed').value);
+  state.reveal={};state.sel={};state.cache.clear();state.tier={};
+  buildDOM();
+ });
  $('run').addEventListener('click',run);
  $('step').addEventListener('click',()=>{stop();stepOnce()});
  $('instant').addEventListener('click',()=>{stop();if(state.tab!=='net'){state.reveal[state.tab]=MATCHES;state.sel[state.tab]=null;render()}});
