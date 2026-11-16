@@ -95,6 +95,8 @@ footer p{margin:4px auto;max-width:120ch}
    <div class="row"><label for="region">Region</label><select id="region"><option>EU-West</option><option>EU-East</option><option>NA-East</option><option>NA-West</option></select>
     <label for="input" style="min-width:0">Input</label><select id="input"><option>Controller</option><option>Mouse+Keyboard</option></select></div>
    <div class="row"><label for="ping">Your ping</label><input type="range" id="ping" min="5" max="120" value="40"><span class="val" id="pingV">40ms</span></div>
+   <div class="row"><label for="playstyle">Playstyle</label><select id="playstyle"><option value="0.5">Slayer</option><option value="0.25">Hybrid</option><option value="0">Objective</option></select><span class="note" style="margin:0">how you play the game</span></div>
+   <div class="row"><label for="objW">Obj. weight</label><input type="range" id="objW" min="0" max="1" step="0.05" value="0.5"><span class="val" id="objWV">0.50</span><span class="note" style="margin:0">0 = pure obj, 1 = pure slayer</span></div>
   </div>
   <div class="panel">
    <h3>Simulation</h3>
@@ -165,7 +167,10 @@ function base(id){
  const skill=Math.round(clamp(50+15*gauss(r),1,100));
  const pr=r();
  const ping=Math.round(pr<0.15?5+r()*20:pr<0.55?25+r()*35:pr<0.80?55+r()*45:pr<0.93?90+r()*50:130+r()*70);
- return{id,skill,ping,region:REGIONS[(r()*4)|0],input:r()<0.58?'Controller':'Mouse+Keyboard',cheat:r()<0.002,kdN:0.8+0.4*r(),kpmN:0.85+0.3*r()};
+ // objW: 0 = pure objective, 1 = pure slayer. Population: ~15% objective, ~25% hybrid, ~60% slayer
+ const objRoll=r();
+ const objW=objRoll<0.15?r()*0.2:objRoll<0.40?0.2+r()*0.3:0.5+r()*0.5;
+ return{id,skill,ping,region:REGIONS[(r()*4)|0],input:r()<0.58?'Controller':'Mouse+Keyboard',cheat:r()<0.002,kdN:0.8+0.4*r(),kpmN:0.85+0.3*r(),objW};
 }
 const N1=['x','','','','Its','The','Mr','iAm','Not','Lil','Big','oG','','Dr'];
 const N2=['Shadow','NoScope','Ghost','Viper','Reaper','Sniper','Toxic','Frost','Blaze','Havoc','Rogue','Phantom','Wolf','Raven','Hawk','Venom','Stealth','Chaos','Nova','Titan','Drift','Bullet','Sweaty','Camper','Quick','Silent','Spartan','Recon','Nuke','Tactical','Clutch','Sneaky','Lag','Mango','Pixel'];
@@ -176,7 +181,7 @@ function instantiate(b){
  const r=mulberry32(mix(POOL_SEED^0xABCDEF,b.id));
  p={id:b.id,name:pickA(r,N1)+pickA(r,N2)+pickA(r,N3),trueSkill:b.skill,mmr:b.skill,sbmmBracket:bracketOf(b.skill),
   kd:+(b.skill/50*b.kdN).toFixed(2),killsPerMatch:Math.round((8+b.skill*0.2)*b.kpmN),ping:b.ping,region:b.region,
-  inputDevice:b.input,recentPerformance:[],quitProbability:0};
+  inputDevice:b.input,recentPerformance:[],quitProbability:0,objW:b.objW};
  INST.set(b.id,p);return p;
 }
 
@@ -211,7 +216,47 @@ function pick(S,cands,need,target,tight){
 function mk(c,light){
  const b=c.b;
  return{id:b.id,name:light?'P'+b.id:instantiate(b).name,skill:b.skill,bracket:bracketOf(b.skill),mmr:c.mmr,ping:c.ping,
-  region:b.region,input:b.input,cheat:b.cheat,isYou:false,recent:[],quitP:0,stayed:false,party:false};
+  region:b.region,input:b.input,cheat:b.cheat,isYou:false,recent:[],quitP:0,stayed:false,party:false,objW:b.objW};
+}
+
+// matchmaking band: effective skill range the system draws from for this match
+// asymmetric: floor protection stops low-skill players being thrown to the wolves
+function matchBand(M,rating,popRatio,trueSkill){
+ // base half-width per mode (in skill points)
+ let hw;
+ if(M.id===1) hw=8;        // SBMM only: steady bracket, moderate width
+ else if(M.id===2) hw=6;   // SBMM+MMR: tight band, precise targeting
+ else if(M.id===3) hw=18;  // Open: wide, skill barely considered
+ else if(M.id===4) hw=7;   // Classic: similar to Mode 2 but persistent
+ else return{lo:1,hi:100}; // Mode 5: no matchmaking, full population
+
+ // population squeeze: high pop narrows, low pop widens
+ // at 2M players, matchmaker has plenty of choices near your rating
+ // at 100k, it has to reach further to fill a lobby
+ const popFactor=1/Math.max(0.3,Math.sqrt(popRatio));
+ hw=hw*popFactor;
+
+ // raw range
+ let lo=rating-hw;
+ let hi=rating+hw*1.15; // slightly more reach upward than down
+
+ // floor protection: the lower you are, the more the bottom is squeezed up
+ // skill 20 doesn't get matched against skill 5, the system protects them
+ // protection is strongest in Mode 1 (pure SBMM), weakest in Mode 3 (open)
+ const protStrength=M.id===1?1.0:M.id===2?0.9:M.id===4?0.85:0.4;
+ if(rating<60){
+  const vuln=(60-rating)/60; // 0 at skill 60, 1 at skill 0
+  const lift=vuln*hw*0.85*protStrength; // push the floor up aggressively
+  lo+=lift;
+ }
+
+ // hard minimum: band floor never drops below a sensible baseline
+ const minFloor=Math.max(1,rating*0.45);
+ lo=Math.max(lo,minFloor);
+
+ lo=clamp(lo,1,199);
+ hi=clamp(hi,2,200);
+ return{lo,hi};
 }
 
 function simulate(modeId,cfg,light){
@@ -219,7 +264,7 @@ function simulate(modeId,cfg,light){
  const usePersist=M.persist||cfg.persist;
  const start=clamp(cfg.kd*50,1,200);
  const you={id:0,name:'You',skill:cfg.skill,mmr:start,bracket:bracketOf(start),ping:cfg.ping,region:cfg.region,
-  input:cfg.input,cheat:false,isYou:true,recent:[],quitP:0,stayed:false,party:false};
+  input:cfg.input,cheat:false,isYou:true,recent:[],quitP:0,stayed:false,party:false,objW:cfg.objW};
  const S={r,you,M},out=[],kdHist=[];
  let lobby=null,party=[];
  for(let n=1;n<=MATCHES;n++){
@@ -257,22 +302,39 @@ function simulate(modeId,cfg,light){
   const eA=mean(A.map(p=>p._e)),eB=mean(B.map(p=>p._e));
   for(const p of all){
    const own=A.includes(p)?eA:eB,opp=A.includes(p)?eB:eA,wc=logistic((p._e-opp+TEAM_EDGE*(own-opp))/LOGI),g=(22+20*tempo)*(0.9+0.2*r());
-   p._k=Math.max(1,Math.round(g*wc*(0.92+0.16*r())));
-   p._d=Math.max(1,Math.round(g*(1-wc)*(0.92+0.16*r())));
+   // objective players trade kills for team contribution. objW 0 = pure obj, 1 = pure slayer
+   const killMod=0.6+0.4*p.objW; // obj players get 60-100% of normal kills
+   const deathMod=1+0.3*(1-p.objW); // obj players die 0-30% more (on the flag)
+   p._k=Math.max(1,Math.round(g*wc*killMod*(0.92+0.16*r())));
+   p._d=Math.max(1,Math.round(g*(1-wc)*deathMod*(0.92+0.16*r())));
+   // objective contribution: hidden team boost that doesn't show in K/D
+   p._obj=p.skill*(1-p.objW)*0.12; // obj players boost their team's effective score
   }
-  const sA=A.reduce((s,p)=>s+p._k,0),sB=B.reduce((s,p)=>s+p._k,0);
+  // team scores include objective contribution
+  const objA=A.reduce((s,p)=>s+p._obj,0),objB=B.reduce((s,p)=>s+p._obj,0);
+  const rawA=A.reduce((s,p)=>s+p._k,0),rawB=B.reduce((s,p)=>s+p._k,0);
+  const sA=Math.round(rawA*(1+objA/Math.max(1,rawA+rawB))),sB=Math.round(rawB*(1+objB/Math.max(1,rawA+rawB)));
   const res=sA>sB?'W':sA<sB?'L':'D',blow=Math.max(sA,sB)>=2*Math.min(sA,sB);
   const snap=all.map(p=>({id:p.id,name:p.name,skill:p.skill,bracket:p.bracket,mmr:p.mmr,ping:p.ping,input:p.input,
-   team:A.includes(p)?'A':'B',k:p._k,d:p._d,cheat:p.cheat,isYou:p.isYou,stayed:p.stayed,party:p.party,q:0}));
+   team:A.includes(p)?'A':'B',k:p._k,d:p._d,cheat:p.cheat,isYou:p.isYou,stayed:p.stayed,party:p.party,q:0,
+   objW:p.objW,objC:+(p._obj).toFixed(1)}));
   // rating update
   const mA=mean(A.map(p=>p.mmr)),mB=mean(B.map(p=>p.mmr));
-  const upd=(p,oppM)=>{
-   const ks=p._k/(p._k+p._d),exp=logistic((p.mmr-oppM)/LOGI),pd=ks-exp;
+  const upd=(p,oppM,won)=>{
+   const ks=p._k/(p._k+p._d);
+   // the system mostly reads K/D. Objective contribution is invisible to it.
+   // winBlend: how much win/loss factors into the rating vs pure K/D
+   // real COD MMR barely considers win/loss, which is why obj players get punished
+   const winSignal=won?0.6:0.35;
+   const winBlend=0.15; // system weights K/D at 85%, win at 15%
+   const effective=ks*(1-winBlend)+winSignal*winBlend;
+   const exp=logistic((p.mmr-oppM)/LOGI),pd=effective-exp;
    const kF=32*cfg.vol*dampOf(p.skill)*shieldOf(p.skill)*(1+Math.abs(pd))*RATING_SCALE;
    const ch=30*Math.tanh(kF*pd/30);p.mmr=clamp(p.mmr+ch,1,200);return ch;
   };
   let change=0;
-  if(M.useMMR){change=upd(you,mB);if(usePersist)others.forEach(p=>upd(p,A.includes(p)?mB:mA))}
+  const youWon=sA>sB;
+  if(M.useMMR){change=upd(you,mB,youWon);if(usePersist)others.forEach(p=>upd(p,A.includes(p)?mB:mA,A.includes(p)?sA>sB:sB>sA))}
   // quit chance and recent form
   all.forEach((p,i)=>{
    const ks=p._k/(p._k+p._d),lost=A.includes(p)?sA<sB:sB<sA;
@@ -298,9 +360,15 @@ function simulate(modeId,cfg,light){
   const disbandCost=usePersist?1.0:(M.useMMR?2.5:1.3);
   const edgePenalty=1+skillEdge*(M.useMMR?1.8:0.4);
   const queueTime=Math.min(600,Math.round(baseQueue*poolPenalty*strictness*disbandCost*edgePenalty));
+  // matchmaking band: the effective skill range the system is pulling from this match
+  // band width depends on mode, population, and player position
+  const popRatio=POOL_SIZE/2000000;
+  const playerRating=M.useMMR?mmrBefore:M.id===1?bracket*10-5:cfg.skill;
+  const bandData=matchBand(M,playerRating,popRatio,cfg.skill);
   out.push({n,mmrBefore,mmrAfter:you.mmr,change,bracket,bracketRating:bracket*10-5,k:you._k,d:you._d,kd,res,sA,sB,blow,
    oppAvg:mean(sk),lobbyMin:Math.min(...lob),lobbyMax:Math.max(...lob),lobbySD:sdev(lob),avgPing:mean(all.map(p=>p.ping)),
-   fam,stayed,actual,perceived:clamp(actual+35*fam+(Math.abs(sA-sB)/(sA+sB)<0.1?5:0),0,100),you:snap[0].q,lobby:snap,queueTime});
+   fam,stayed,actual,perceived:clamp(actual+35*fam+(Math.abs(sA-sB)/(sA+sB)<0.1?5:0),0,100),you:snap[0].q,lobby:snap,queueTime,
+   bandLo:bandData.lo,bandHi:bandData.hi});
  }
  return{mode:modeId,cfg,matches:out};
 }
@@ -327,7 +395,7 @@ const $=id=>document.getElementById(id);
 
 const INFO={
 1:"This is how matchmaking worked in older Call of Duty games, before 2016. The game looks at your overall stats, your kill/death ratio, how many kills you get per game, and puts you in a skill bracket from 1 to 10. You stay in that bracket unless your stats change dramatically over many games. Your matches feel consistent because the system isn't constantly adjusting after every single game.",
-2:"This is how matchmaking works in every Call of Duty from Infinite Warfare (2016) to the present day. On top of the old skill brackets, there's a second system called MMR (Matchmaking Rating) that updates after EVERY match. Have a great game? Your MMR jumps up and your next lobby is harder. Get stomped? Your MMR drops and your next lobby is easier. This creates the 'rubber-band' effect, you swing between easy and hard lobbies constantly. The community blames SBMM for this, but SBMM has been in COD since 2007. The rubber-band effect is caused by MMR, which was added in 2016.",
+2:"This is how matchmaking works in every Call of Duty from Infinite Warfare (2016) to the present day. On top of the old skill brackets, there's a second system called MMR (Matchmaking Rating) that updates after EVERY match. Have a great game? Your MMR jumps up and your next lobby is harder. Get stomped? Your MMR drops and your next lobby is easier. This creates the 'rubber-band' effect, you swing between easy and hard lobbies constantly. The community blames SBMM for this, but SBMM has been in COD since 2007. The rubber-band effect is caused by MMR, which was added in 2016. Try switching playstyle to Objective: the system reads your K/D as underperformance and pushes your MMR down, even when you're winning matches. The system wasn't built to recognise what winning actually costs.",
 3:"This is Open Matchmaking, as used in Black Ops 7 from launch until Season 4. The old skill brackets are dialled way back, skill is 'minimally considered' when building lobbies. Sounds great, right? The problem is MMR is still running underneath, still tracking your performance, still adjusting after every match. The result? Wider skill gaps in lobbies, more blowouts, and the rubber-band effect actually gets WORSE for average players. Activision's own data showed 32.7% higher quit rates and 59.2% more 'Not Fun' ratings under this system.",
 4:"This is Classic Matchmaking, introduced in Black Ops 7 Season 5 and used in Modern Warfare 4. Activision said it was 'inspired by' Black Ops 1 and 2, but it's not the same thing. It keeps your lobby together between matches instead of disbanding and rebuilding, which feels better because you learn your opponents' playstyles. But MMR is still running underneath. The only change is the lobby persists. It feels like a fix, but it's a placebo. The matchmaking engine underneath is identical.",
 5:"This is what it would actually look like if Activision removed all skill-based matchmaking. No SBMM brackets. No MMR. No skill consideration at all. The matchmaker finds the best connection and throws everyone in together. No rubber-banding, because there's nothing adjusting your lobbies between matches. But no protection either. A 0.66 KD casual can land in a lobby with a 2.0 KD grinder, and that happens regularly because the system isn't trying to prevent it. The top players love it, every lobby is a pub stomp. The bottom players hate it, every lobby is a death sentence. And the middle? They get the same random spread as everyone else, which means their experience is entirely dependent on who happens to be searching at the same time. This is what 'remove SBMM' actually means. Not better matchmaking. No matchmaking."
@@ -423,6 +491,8 @@ function lineChart(cv,o){
  let lo=Infinity,hi=-Infinity;
  for(const s of o.series)for(let i=0;i<Math.min(rev,s.data.length);i++){const v=s.data[i];if(v==null||isNaN(v))continue;lo=Math.min(lo,v);hi=Math.max(hi,v)}
  for(const r of o.refs||[]){lo=Math.min(lo,r.y);hi=Math.max(hi,r.y)}
+ // include band range in axis bounds so it doesn't get clipped
+ if(o.band){const bm=Math.min(rev,o.band.lo.length);for(let i=0;i<bm;i++){lo=Math.min(lo,o.band.lo[i]);hi=Math.max(hi,o.band.hi[i])}}
  if(!isFinite(lo)){lo=0;hi=1}
  const span=Math.max(hi-lo,o.minSpan||1)*1.15,mid=(hi+lo)/2;lo=mid-span/2;hi=mid+span/2;
  if(o.floor!=null&&lo<o.floor){hi+=o.floor-lo;lo=o.floor}
@@ -438,6 +508,24 @@ function lineChart(cv,o){
   const y=Yp(r.y);ctx.strokeStyle=r.color||T2;ctx.setLineDash([3,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(P.l+pw,y);ctx.stroke();ctx.setLineDash([]);
   ctx.fillStyle=r.color||T2;ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText(r.label,P.l+pw-2,y-2);
  }
+ // matchmaking band: shaded fill showing the effective skill range
+ if(o.band&&rev){
+  const bLo=o.band.lo,bHi=o.band.hi,m=Math.min(rev,bLo.length);
+  if(m>0){
+   ctx.fillStyle=o.band.color||'rgba(68,136,255,.10)';
+   ctx.beginPath();
+   // top edge (hi values) left to right
+   for(let i=0;i<m;i++){const x=X(i),y=Yp(bHi[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+   // bottom edge (lo values) right to left
+   for(let i=m-1;i>=0;i--){const x=X(i),y=Yp(bLo[i]);ctx.lineTo(x,y)}
+   ctx.closePath();ctx.fill();
+   // thin border lines for the band edges
+   ctx.strokeStyle=o.band.stroke||'rgba(68,136,255,.25)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+   ctx.beginPath();for(let i=0;i<m;i++){const x=X(i),y=Yp(bHi[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.stroke();
+   ctx.beginPath();for(let i=0;i<m;i++){const x=X(i),y=Yp(bLo[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.stroke();
+   ctx.setLineDash([]);
+  }
+ }
  if(o.sel!=null&&o.sel<rev){const x=X(o.sel);ctx.fillStyle='rgba(68,136,255,.12)';ctx.fillRect(x-pw/(n-1)/2,P.t,pw/(n-1),ph)}
  for(const s of o.series){
   const m=Math.min(rev,s.data.length);if(!m)continue;
@@ -448,7 +536,9 @@ function lineChart(cv,o){
   ctx.stroke();ctx.setLineDash([]);
   if(s.dots!==false){ctx.fillStyle=s.color;for(let i=0;i<m;i++){const v=s.data[i];if(v==null)continue;ctx.beginPath();ctx.arc(X(i),Yp(v),s.w>2?3.5:2.5,0,7);ctx.fill()}}
  }
- legend(ctx,o.series.map(s=>({label:s.label,color:s.color,dash:s.dash})),P.l+4,14,w-10);
+ const legItems=o.series.map(s=>({label:s.label,color:s.color,dash:s.dash}));
+ if(o.band&&o.band.label)legItems.push({label:o.band.label,color:o.band.stroke||'rgba(68,136,255,.5)',box:true});
+ legend(ctx,legItems,P.l+4,14,w-10);
  if(!rev)emptyMsg(ctx,w,h,'Press Run or Step to start');
  cv._map={l:P.l,pw,n};
 }
@@ -487,7 +577,7 @@ const pingCol=p=>p<30?G:p<60?Y:p<90?O:R;
 const pct=v=>(v*100).toFixed(0)+'%';
 
 /* ---------- state + sim access ---------- */
-function cfgNow(){return{seed:mix(state.seed,2),skill:+$('skill').value,kd:+$('kd').value||0.02,region:$('region').value,input:$('input').value,ping:+$('ping').value,vol:+$('vol').value,persist:$('persist').checked,party:$('party').checked}}
+function cfgNow(){return{seed:mix(state.seed,2),skill:+$('skill').value,kd:+$('kd').value||0.02,region:$('region').value,input:$('input').value,ping:+$('ping').value,vol:+$('vol').value,persist:$('persist').checked,party:$('party').checked,objW:+$('objW').value}}
 function getRes(id){
  const c=cfgNow(),k=id+'|'+JSON.stringify(c);
  let r=state.cache.get(k);
@@ -531,13 +621,17 @@ function statTiles(id,s){
   ['Quit risk',pct(s.quit),s.quit>0.08?'bad':'warn','avg per player'],
   ['Low-skill quit',pct(s.quitLow),s.quitLow>0.1?'bad':'warn','bottom 30%']];
  if(isPersistActive(id))t.push(['Returning',pct(s.fam||0),'info','players kept'],['Unique players',s.unique,'info','seen in lobbies']);
+ const ow=+($('objW').value);
+ if(ow<0.4)t.push(['OBJ penalty',((1-ow)*30).toFixed(0)+'%','warn','K/D suppressed by playstyle']);
  return t;
 }
 function lobbyTable(id,m){
  const M=MODES[id],persist=isPersistActive(id);
  const rows=m.lobby.slice().sort((a,b)=>a.team===b.team?b.k-a.k:a.team<b.team?-1:1);
- const head=`<tr><th>Team</th><th>Player</th><th>Skill</th><th>Bracket</th><th>MMR</th><th>Ping</th><th>Input</th><th>K</th><th>D</th><th>K/D</th>${persist?'<th>Status</th>':''}</tr>`;
- return`<table>${head}${rows.map(p=>`<tr class="${p.isYou?'you':''}"><td class="${p.team==='A'?'tA':'tB'}">${p.team==='A'?'Yours':'Enemy'}</td><td>${p.name}${p.cheat?' <span class="badge bad">cheater</span>':''}</td><td>${p.skill}</td><td>${M.id===5?'-':p.bracket}</td><td>${M.useMMR?p.mmr.toFixed(0):'-'}</td><td style="color:${pingCol(p.ping)}">${p.ping}ms</td><td>${p.input==='Controller'?'Pad':'MnK'}</td><td>${p.k}</td><td>${p.d}</td><td>${(p.k/p.d).toFixed(2)}</td>${persist?`<td>${p.isYou?'':p.party?'<span class="badge info">party</span>':p.stayed?'<span class="badge good">stayed</span>':'<span class="badge warn">new</span>'}</td>`:''}</tr>`).join('')}</table>`;
+ const psLabel=w=>w>=0.7?'Slayer':w>=0.3?'Hybrid':'OBJ';
+ const psClass=w=>w>=0.7?'':w>=0.3?'info':'warn';
+ const head=`<tr><th>Team</th><th>Player</th><th>Skill</th><th>Bracket</th><th>MMR</th><th>Style</th><th>Ping</th><th>Input</th><th>K</th><th>D</th><th>K/D</th><th>OBJ</th>${persist?'<th>Status</th>':''}</tr>`;
+ return`<table>${head}${rows.map(p=>`<tr class="${p.isYou?'you':''}"><td class="${p.team==='A'?'tA':'tB'}">${p.team==='A'?'Yours':'Enemy'}</td><td>${p.name}${p.cheat?' <span class="badge bad">cheater</span>':''}</td><td>${p.skill}</td><td>${M.id===5?'-':p.bracket}</td><td>${M.useMMR?p.mmr.toFixed(0):'-'}</td><td><span class="badge ${psClass(p.objW)}">${psLabel(p.objW)}</span></td><td style="color:${pingCol(p.ping)}">${p.ping}ms</td><td>${p.input==='Controller'?'Pad':'MnK'}</td><td>${p.k}</td><td>${p.d}</td><td>${(p.k/p.d).toFixed(2)}</td><td>${p.objC>0?'+'+p.objC:'-'}</td>${persist?`<td>${p.isYou?'':p.party?'<span class="badge info">party</span>':p.stayed?'<span class="badge good">stayed</span>':'<span class="badge warn">new</span>'}</td>`:''}</tr>`).join('')}</table>`;
 }
 function lobbyBars(cv,m){
  if(!m){barChart(cv,{labels:[],series:[],empty:'No match yet'});return}
@@ -560,8 +654,9 @@ function kdChart(cv,ms,r,sel,lab,col){
 function renderMode(id){
  const k='m'+id,res=getRes(id),r=state.reveal[k]||0,ms=res.matches,vis=ms.slice(0,r),sel=selIdx(k),M=MODES[id];
  const sm=summarize(vis),m=sel!=null?ms[sel]:null;
+ const bandOpt=id!==5?{lo:ms.map(m=>m.bandLo),hi:ms.map(m=>m.bandHi),color:M.useMMR?'rgba(68,136,255,.08)':'rgba(68,136,255,.12)',stroke:M.useMMR?'rgba(68,136,255,.2)':'rgba(68,136,255,.3)',label:'Matchmaking range'}:null;
  lineChart($(`m${id}-mmr`),{reveal:r,sel,yLabel:M.useMMR?'MMR (1 to 200 scale)':'Skill rating',minSpan:24,
-  refs:[{y:+$('skill').value,label:'Your true skill',color:'#666677'}],series:ratingSeries(id,ms)});
+  refs:[{y:+$('skill').value,label:'Your true skill',color:'#666677'}],series:ratingSeries(id,ms),band:bandOpt});
  kdChart($(`m${id}-kd`),ms,r,sel);
  lobbyBars($(`m${id}-lob`),m);pingBars($(`m${id}-ping`),m);
  $(`m${id}-msel`).textContent=m?`Match ${m.n}: ${m.res==='W'?'WIN':m.res==='L'?'LOSS':'DRAW'} ${m.sA} to ${m.sB}${m.blow?' (blowout)':''}`:'Match -';
@@ -608,7 +703,7 @@ function tierSweep(id){
  const c=cfgNow(),skills=[5,15,25,33,40,50,58,66,75,85,92,100];
  state.tier[id]=skills.map(s=>{
   let mv=0,sw=0,kd=0;
-  for(let k=0;k<4;k++){const sm=summarize(simulate(id,{...c,skill:s,kd:s/50,seed:(c.seed+k*7919)>>>0},true).matches);mv+=sm.mmrMove;sw+=sm.lobbySwing;kd+=sm.kdSD}
+  for(let k=0;k<4;k++){const sm=summarize(simulate(id,{...c,skill:s,kd:s/50,objW:0.5,seed:(c.seed+k*7919)>>>0},true).matches);mv+=sm.mmrMove;sw+=sm.lobbySwing;kd+=sm.kdSD}
   return{s,mv:mv/4,sw:sw/4,kd:kd/4};
  });
  renderTier(id);
@@ -619,13 +714,15 @@ function renderCompare(){
  const ra=getRes(a).matches,rb=getRes(b).matches,sa=summarize(ra.slice(0,r)),sb=summarize(rb.slice(0,r));
  $('cA-t').textContent='Left: '+MODES[a].name;$('cB-t').textContent='Right: '+MODES[b].name;
  const sk=+$('skill').value;
- lineChart($('cA-mmr'),{reveal:r,sel,yLabel:'Rating',minSpan:24,refs:[{y:sk,label:'Your true skill',color:'#666677'}],series:ratingSeries(a,ra)});
- lineChart($('cB-mmr'),{reveal:r,sel,yLabel:'Rating',minSpan:24,refs:[{y:sk,label:'Your true skill',color:'#666677'}],series:ratingSeries(b,rb)});
+ const bandA=a!==5?{lo:ra.map(m=>m.bandLo),hi:ra.map(m=>m.bandHi),color:'rgba(68,136,255,.08)',stroke:'rgba(68,136,255,.2)',label:'Matchmaking range'}:null;
+ const bandB=b!==5?{lo:rb.map(m=>m.bandLo),hi:rb.map(m=>m.bandHi),color:'rgba(68,136,255,.08)',stroke:'rgba(68,136,255,.2)',label:'Matchmaking range'}:null;
+ lineChart($('cA-mmr'),{reveal:r,sel,yLabel:'Rating',minSpan:24,refs:[{y:sk,label:'Your true skill',color:'#666677'}],series:ratingSeries(a,ra),band:bandA});
+ lineChart($('cB-mmr'),{reveal:r,sel,yLabel:'Rating',minSpan:24,refs:[{y:sk,label:'Your true skill',color:'#666677'}],series:ratingSeries(b,rb),band:bandB});
  kdChart($('cA-kd'),ra,r,sel,'',G);kdChart($('cB-kd'),rb,r,sel,'',R);
  const mini=(id,s)=>s?statTiles(id,s).slice(0,6):[['Matches','0','','press Run']];
  tiles($('cA-stats'),mini(a,sa));tiles($('cB-stats'),mini(b,sb));
  lineChart($('c-mmr'),{reveal:r,sel,yLabel:'Rating / lobby skill',minSpan:24,refs:[{y:sk,label:'Your true skill',color:'#666677'}],
-  series:ratingSeries(a,ra,'A').concat(ratingSeries(b,rb,'B')).map((s,i)=>s)});
+  series:ratingSeries(a,ra,'A').concat(ratingSeries(b,rb,'B')).map((s,i)=>s),band:bandA});
  barChart($('c-var'),sa?{labels:[MODES[a].short,MODES[b].short],series:[{color:G,values:[sa.kdSD,sb.kdSD],colors:[G,R]}],vals:v=>v.toFixed(2),yLabel:'K/D standard deviation',maxBar:90,
   legend:[{label:'Higher = more rubber-banding',color:T2,box:true}]}:{labels:[],series:[],empty:'No matches yet'});
  $('c-verdict').innerHTML=sa?verdict(a,b,sa,sb):'Press Run to play the same 30 matches under both systems. Same you, same '+POOL_SIZE.toLocaleString('en-GB')+' players.';
@@ -737,7 +834,7 @@ function exportCSV(){
  for(const id of ids)for(const m of getRes(id).matches)rows.push([MODES[id].name,m.n,m.res,m.sA,m.sB,m.blow?1:0,m.k,m.d,m.kd.toFixed(3),
   MODES[id].useMMR?m.mmrBefore.toFixed(2):'',MODES[id].useMMR?m.mmrAfter.toFixed(2):'',MODES[id].useMMR?m.change.toFixed(2):'',MODES[id].id===5?'':m.bracket,
   m.oppAvg.toFixed(2),m.lobbyMin,m.lobbyMax,m.avgPing.toFixed(1),m.you.toFixed(3),m.queueTime]);
- const meta=`# seed=${$('seed').value} skill=${c.skill} kd=${c.kd} ping=${c.ping} region=${c.region} aggressiveness=${c.vol} pool=${POOL_SIZE}\n`;
+ const meta=`# seed=${$('seed').value} skill=${c.skill} kd=${c.kd} ping=${c.ping} region=${c.region} aggressiveness=${c.vol} pool=${POOL_SIZE} objW=${c.objW}\n`;
  const blob=new Blob([meta+rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`sbmm-sim-${k}-seed${$('seed').value}.csv`;document.body.appendChild(a);a.click();
  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
@@ -754,6 +851,8 @@ function wire(){
  $('vol').addEventListener('input',()=>{$('volV').textContent=(+$('vol').value).toFixed(2);changed()});
  $('speed').addEventListener('input',()=>{$('speedV').textContent=$('speed').value+'ms';if(state.timer){stop();run()}});
  ['region','input','overlay','lobLine','party'].forEach(i=>$(i).addEventListener('change',changed));
+ $('playstyle').addEventListener('change',()=>{$('objW').value=$('playstyle').value;$('objWV').textContent=(+$('objW').value).toFixed(2);changed()});
+ $('objW').addEventListener('input',()=>{$('objWV').textContent=(+$('objW').value).toFixed(2);changed()});
  $('persist').addEventListener('change',()=>{
   state.cache.clear();state.tier={};state.reveal={};state.sel={};
   buildDOM();
