@@ -1,10 +1,10 @@
 # COD Matchmaking Simulator
 
-An interactive browser-based simulator that demonstrates how Call of Duty's matchmaking systems actually work, and why the community has been arguing about the wrong thing for years.
+An interactive browser-based simulator that demonstrates how Call of Duty's matchmaking systems work, and why the community has been arguing about the wrong thing for years.
 
 ## What Is This?
 
-The Call of Duty community has spent nearly a decade screaming about SBMM (Skill-Based Matchmaking). The problem is, SBMM has been in every COD since 2007. The thing actually causing the "yo-yo" effect, where you swing between easy and hard lobbies every other match, is MMR (Matchmaking Rating), a separate dynamic rating system added in 2016 with Infinite Warfare.
+The Call of Duty community has spent nearly a decade screaming about SBMM (Skill-Based Matchmaking). The problem is, SBMM has been in every COD since 2007. The thing causing the "yo-yo" effect, where you swing between easy and hard lobbies every other match, is MMR (Matchmaking Rating), a separate dynamic rating system added in 2016 with Infinite Warfare.
 
 Nobody in the COD creator space has ever built anything that shows this. They just shout about it.
 
@@ -36,9 +36,19 @@ Run any two modes side-by-side and watch the same players produce completely dif
 
 **Player Pool**: Scale the population from 2,000,000 down to 100,000. Smaller pools produce longer queue times, wider skill ranges in lobbies, and worse ping spread, especially in strict MMR modes where the algorithm has fewer valid candidates to pull from.
 
+**SBMM Bracket Overlay**: Toggle a shaded band on the skill chart showing the effective skill range the matchmaker draws from for each match. The band is asymmetric. Low-skill players get floor protection that squeezes the bottom edge upward, so a skill 20 player isn't thrown into a lobby with skill 5 players. The band widens when population drops and narrows when the pool is healthy.
+
+**Lobby Average Line**: Toggle a line showing the average skill level of each lobby across the 30-match run.
+
+## Playstyle System
+
+Your playstyle affects how the game reads your performance. Slayers focus on kills and rarely touch objectives. Objective players play the flag, the hardpoint, the bomb. Hybrids do both.
+
+The MMR system reads K/D at 85% and win/loss at 15%. Objective players die more because they're on the flag, their K/D drops, and the system punishes them for it. The simulator models this. Set your playstyle and objective weight, then watch how the same skill level produces different MMR trajectories depending on how you play.
+
 ## Queue Time Model
 
-Queue times aren't flat estimates anymore. They factor in pool size, mode strictness, lobby persistence, and how far your skill sits from the centre of the bell curve. In Mode 2 at skill 50 with a full pool, you're looking at around 15 seconds. Push that skill to 90 and it climbs past 30. Drop the pool to 250,000 at skill 90 and you're waiting minutes. That's the 2am experience. Persistent lobbies cut queue times because the system is backfilling slots, not rebuilding from nothing.
+Queue times factor in pool size, mode strictness, lobby persistence, and how far your skill sits from the centre of the bell curve. In Mode 2 at skill 50 with a full pool, you're looking at around 15 seconds. Push that skill to 90 and it climbs past 30. Drop the pool to 250,000 at skill 90 and you're waiting minutes. That's the 2am experience. Persistent lobbies cut queue times because the system is backfilling slots, not rebuilding from nothing.
 
 ## Ping and Connection Model
 
@@ -48,11 +58,11 @@ How much the matchmaker cares about ping depends on the mode. Mode 1 (SBMM Only)
 
 ## The "You" Player
 
-One player in the pool is highlighted as "You." Set your own starting skill, KD, region, input device, and ping, then watch how each matchmaking system treats you differently across 30 matches.
+One player in the pool is highlighted as "You." Set your own starting skill, K/D, region, input device, ping, and playstyle, then watch how each matchmaking system treats you differently across 30 matches.
 
 ## How The MMR Model Works
 
-The simulator uses a Glicko-style MMR system on a 1 to 200 internal scale with a K-factor that scales based on population position. Players near the skill average (skill 50) experience the full force of MMR adjustments. Players at the extremes, both casual and elite, get dampened adjustments, which is why the yo-yo hits the mid-tier majority the hardest. The expanded scale gives top-tier players headroom above their starting MMR, so the system can push them up after a good performance and pull them back down, producing the compressed but visible yo-yo pattern that high-skill players actually experience.
+The simulator uses a Glicko-style MMR system on a 1 to 200 internal scale with a K-factor that scales based on population position. Players near the skill average (skill 50) experience the full force of MMR adjustments. Players at the extremes, both casual and elite, get dampened adjustments, which is why the yo-yo hits the mid-tier majority the hardest. Below-average players also get retention shielding, softening their rating moves so the system doesn't shove them into hard lobbies, matching the engagement-protection behaviour described in Activision's patent. The expanded scale gives top-tier players headroom above their starting MMR, so the system can push them up after a good performance and pull them back down, producing the compressed but visible yo-yo pattern that high-skill players experience.
 
 This matches the real-world pattern: casuals barely notice, the mid-tier majority gets whiplash, and the top tier gets locked in a box with no variety.
 
