@@ -195,20 +195,28 @@ function search(S,exclude){
   const b=base(id);let ping=b.ping;
   if(b.region!==S.you.region){if(r()>0.08)continue;ping+=80+Math.round(r()*60)}
   if(r()>0.55+0.45*b.skill/100)continue; // playtime weighting, better players play more
-  const m=S.M.useMMR?clamp(b.skill+gauss(r)*6*dampOf(b.skill),1,200):b.skill;
+  // MMR drifts from true skill based on recent form. Good streaks push it up,
+  // bad streaks pull it down. The drift is wider than you'd think because MMR
+  // is always chasing the last few games, not your lifetime average.
+  const drift=gauss(r)*12*dampOf(b.skill); // was 6, doubled for realistic spread
+  const m=S.M.useMMR?clamp(b.skill+drift,1,200):b.skill;
   exclude.add(id);
   out.push({b,ping,mmr:m,arr:r()});
  }
  return out;
 }
 function pick(S,cands,need,target,tight){
- const M=S.M,yp=S.you.ping;
+ const M=S.M,yp=S.you.ping,r=S.r;
  for(const c of cands){
   const pd=Math.abs(c.ping-yp);
   const conn=pd/20+2*c.arr+(pd>80?pd/8:0)+(pd>150?80:0);
-  if(tight)c.s=Math.abs(c.mmr-target)/8+0.3*conn;
-  else if(M.id===1)c.s=0.3*Math.abs(bracketOf(c.b.skill)-target)+0.7*conn;
-  else{const cw=Math.max(0.1,0.5-0.6*M.skillW);c.s=M.skillW*Math.abs(c.mmr-target)/M.norm+cw*conn;}
+  // jitter simulates queue timing and "good enough" thresholds
+  // the matchmaker doesn't wait for perfect candidates, it grabs from whoever
+  // is searching at that moment, so two players with similar scores are interchangeable
+  const jitter=r()*1.5;
+  if(tight)c.s=Math.abs(c.mmr-target)/8+0.3*conn+jitter*0.4;
+  else if(M.id===1)c.s=0.3*Math.abs(bracketOf(c.b.skill)-target)+0.7*conn+jitter;
+  else{const cw=Math.max(0.1,0.5-0.6*M.skillW);c.s=M.skillW*Math.abs(c.mmr-target)/M.norm+cw*conn+jitter*0.6;}
  }
  cands.sort((a,b)=>a.s-b.s);
  return cands.slice(0,need);
